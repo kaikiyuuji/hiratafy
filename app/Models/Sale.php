@@ -5,7 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property int|null $campaign_id
+ * @property string|null $order_number
+ * @property string|null $customer_name
+ * @property Carbon $sold_at
+ * @property int $products_subtotal_cents
+ * @property int $discount_cents
+ * @property int $shipping_cents
+ * @property int $revenue_cents
+ * @property int $product_cost_cents
+ * @property int $gross_profit_cents
+ * @property string|null $notes
+ */
 class Sale extends Model
 {
     protected $fillable = [

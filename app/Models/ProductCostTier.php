@@ -5,6 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $product_id
+ * @property int $min_quantity
+ * @property int $unit_cost_cents
+ */
 class ProductCostTier extends Model
 {
     protected $fillable = ['product_id', 'min_quantity', 'unit_cost_cents'];

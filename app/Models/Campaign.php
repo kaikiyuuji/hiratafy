@@ -5,7 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $name
+ * @property string $platform
+ * @property bool $is_active
+ * @property Carbon|null $starts_on
+ * @property Carbon|null $ends_on
+ * @property string|null $notes
+ */
 class Campaign extends Model
 {
     protected $fillable = [

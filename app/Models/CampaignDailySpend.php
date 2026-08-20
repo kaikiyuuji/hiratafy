@@ -4,7 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $campaign_id
+ * @property Carbon $spend_date
+ * @property int $budget_cents
+ * @property int|null $actual_spend_cents
+ */
 class CampaignDailySpend extends Model
 {
     protected $fillable = [
