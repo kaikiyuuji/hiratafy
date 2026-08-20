@@ -1,5 +1,15 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import {
+    BadgePercent,
+    ChartNoAxesCombined,
+    LayoutDashboard,
+    Megaphone,
+    Package,
+    Settings,
+    ShoppingBag,
+    Tags,
+    WalletCards,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -13,27 +23,56 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
+        href: '/dashboard',
+        icon: LayoutDashboard,
+    },
+    {
+        title: 'Vendas',
+        href: '/vendas',
+        icon: ShoppingBag,
+    },
+    {
+        title: 'Investimentos',
+        href: '/investimentos',
+        icon: WalletCards,
+    },
+    {
+        title: 'Campanhas',
+        href: '/campanhas',
+        icon: Megaphone,
+    },
+    {
+        title: 'Produtos',
+        href: '/produtos',
+        icon: Package,
+    },
+    {
+        title: 'Categorias',
+        href: '/categorias',
+        icon: Tags,
+    },
+    {
+        title: 'Descontos',
+        href: '/descontos',
+        icon: BadgePercent,
     },
 ];
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
+        title: 'Regras financeiras',
+        href: '/settings/financial',
+        icon: ChartNoAxesCombined,
     },
     {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
+        title: 'Configurações',
+        href: '/settings/profile',
+        icon: Settings,
     },
 ];
 
@@ -44,7 +83,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href="/dashboard" prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
