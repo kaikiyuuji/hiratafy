@@ -133,3 +133,86 @@ test('actual spend replaces the planned budget in reports', function () {
         ->where('summary.ad_spend_cents', 28745)
         ->where('campaigns.0.ad_spend_cents', 28745));
 });
+
+test('investment calendar shows filled days and campaign budgets for the selected month', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $mainCampaign = Campaign::create([
+        'user_id' => $user->id,
+        'name' => 'Main',
+    ]);
+    $testCampaign = Campaign::create([
+        'user_id' => $user->id,
+        'name' => 'Test',
+    ]);
+    $otherCampaign = Campaign::create([
+        'user_id' => $otherUser->id,
+        'name' => 'Other',
+    ]);
+
+    CampaignDailySpend::insert([
+        [
+            'campaign_id' => $mainCampaign->id,
+            'spend_date' => '2026-08-02',
+            'budget_cents' => 30000,
+            'actual_spend_cents' => 28745,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+        [
+            'campaign_id' => $testCampaign->id,
+            'spend_date' => '2026-08-02',
+            'budget_cents' => 4000,
+            'actual_spend_cents' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+        [
+            'campaign_id' => $mainCampaign->id,
+            'spend_date' => '2026-08-19',
+            'budget_cents' => 45000,
+            'actual_spend_cents' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+        [
+            'campaign_id' => $mainCampaign->id,
+            'spend_date' => '2026-07-31',
+            'budget_cents' => 25000,
+            'actual_spend_cents' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+        [
+            'campaign_id' => $otherCampaign->id,
+            'spend_date' => '2026-08-02',
+            'budget_cents' => 99900,
+            'actual_spend_cents' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+    ]);
+
+    $response = $this->actingAs($user)->get(route('campaign-spends.index', [
+        'date' => '2026-08-20',
+    ]));
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('campaign-spends/index')
+        ->where('calendar.month', '2026-08')
+        ->where('calendar.previous_month_date', '2026-07-01')
+        ->where('calendar.next_month_date', '2026-09-01')
+        ->where('calendar.days_count', 2)
+        ->where('calendar.budget_total_cents', 79000)
+        ->has('calendar.days', 2)
+        ->where('calendar.days.0.date', '2026-08-02')
+        ->where('calendar.days.0.budget_total_cents', 34000)
+        ->has('calendar.days.0.entries', 2)
+        ->where('calendar.days.0.entries.0.campaign_name', 'Main')
+        ->where('calendar.days.0.entries.0.budget_cents', 30000)
+        ->where('calendar.days.0.entries.0.actual_spend_cents', 28745)
+        ->where('calendar.days.0.entries.1.campaign_name', 'Test')
+        ->where('calendar.days.0.entries.1.budget_cents', 4000)
+        ->where('calendar.days.1.date', '2026-08-19')
+        ->where('calendar.days.1.budget_total_cents', 45000));
+});

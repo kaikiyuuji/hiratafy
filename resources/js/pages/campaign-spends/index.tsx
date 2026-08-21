@@ -1,6 +1,10 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import {
+    ArrowRight,
+    CalendarCheck2,
     CalendarDays,
+    ChevronLeft,
+    ChevronRight,
     CircleDollarSign,
     Info,
     Megaphone,
@@ -28,8 +32,10 @@ import { Spinner } from '@/components/ui/spinner';
 import {
     centsToInput,
     formatCurrency,
+    formatDate,
     moneyInputToCents,
 } from '@/lib/formatters';
+import { cn } from '@/lib/utils';
 
 type CampaignSpendRow = {
     id: number;
@@ -51,12 +57,36 @@ type SpendFormData = {
     entries: SpendEntry[];
 };
 
+type CalendarEntry = {
+    campaign_id: number;
+    campaign_name: string;
+    budget_cents: number;
+    actual_spend_cents: number | null;
+};
+
+type CalendarDay = {
+    date: string;
+    budget_total_cents: number;
+    entries: CalendarEntry[];
+};
+
+type BudgetCalendar = {
+    month: string;
+    previous_month_date: string;
+    next_month_date: string;
+    days_count: number;
+    budget_total_cents: number;
+    days: CalendarDay[];
+};
+
 export default function CampaignSpendsIndex({
     date,
     campaigns,
+    calendar,
 }: {
     date: string;
     campaigns: CampaignSpendRow[];
+    calendar: BudgetCalendar;
 }) {
     const editableCampaigns = campaigns.filter(
         (campaign) => campaign.is_active || campaign.budget_cents !== null,
@@ -146,6 +176,8 @@ export default function CampaignSpendsIndex({
                         </form>
                     </CardContent>
                 </Card>
+
+                <InvestmentCalendar calendar={calendar} selectedDate={date} />
 
                 {editableCampaigns.length === 0 ? (
                     <Card className="shadow-xs">
@@ -323,3 +355,275 @@ export default function CampaignSpendsIndex({
 CampaignSpendsIndex.layout = {
     breadcrumbs: [{ title: 'Investimentos', href: '/investimentos' }],
 };
+
+function InvestmentCalendar({
+    calendar,
+    selectedDate,
+}: {
+    calendar: BudgetCalendar;
+    selectedDate: string;
+}) {
+    const cells = buildCalendarCells(calendar);
+
+    return (
+        <Card className="gap-0 overflow-hidden py-0 shadow-xs">
+            <CardHeader className="gap-4 border-b py-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0 space-y-1.5">
+                    <CardTitle className="flex items-center gap-2 capitalize">
+                        <CalendarCheck2 className="size-4 text-primary" />
+                        {formatMonth(calendar.month)}
+                    </CardTitle>
+                    <CardDescription>
+                        {calendar.days_count === 0
+                            ? 'Nenhum dia preenchido neste mês.'
+                            : `${calendar.days_count} dia${calendar.days_count > 1 ? 's' : ''} preenchido${calendar.days_count > 1 ? 's' : ''} · ${formatCurrency(calendar.budget_total_cents)} em orçamento`}
+                    </CardDescription>
+                    {calendar.days_count > 0 && (
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                            <span className="flex items-center gap-1.5">
+                                <span className="size-1.5 rounded-full bg-primary" />
+                                Somente orçamento
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                                <span className="size-1.5 rounded-full bg-emerald-500" />
+                                Gasto real informado
+                            </span>
+                        </div>
+                    )}
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button asChild variant="outline" size="icon">
+                        <Link
+                            href={`/investimentos?date=${calendar.previous_month_date}`}
+                            aria-label="Mês anterior"
+                        >
+                            <ChevronLeft />
+                        </Link>
+                    </Button>
+                    <Button asChild variant="outline" size="icon">
+                        <Link
+                            href={`/investimentos?date=${calendar.next_month_date}`}
+                            aria-label="Próximo mês"
+                        >
+                            <ChevronRight />
+                        </Link>
+                    </Button>
+                </div>
+            </CardHeader>
+
+            <CardContent className="py-4 xl:hidden">
+                {calendar.days.length === 0 ? (
+                    <div className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+                        Salve o orçamento de um dia para ele aparecer aqui.
+                    </div>
+                ) : (
+                    <div className="grid gap-3 md:grid-cols-2">
+                        {calendar.days.map((day) => (
+                            <Link
+                                key={day.date}
+                                href={`/investimentos?date=${day.date}`}
+                                className={cn(
+                                    'group rounded-xl border p-4 transition-colors hover:border-primary/40 hover:bg-muted/35',
+                                    day.date === selectedDate &&
+                                        'border-primary bg-primary/[0.045] ring-1 ring-primary/20',
+                                )}
+                            >
+                                <div className="flex items-start justify-between gap-4 border-b pb-3">
+                                    <div className="min-w-0">
+                                        <p className="font-medium">
+                                            {formatDate(day.date)}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {day.entries.length}{' '}
+                                            {day.entries.length === 1
+                                                ? 'campanha'
+                                                : 'campanhas'}
+                                        </p>
+                                    </div>
+                                    <div className="shrink-0 text-right">
+                                        <p className="text-[11px] text-muted-foreground">
+                                            Orçamento total
+                                        </p>
+                                        <p className="font-semibold tabular-nums">
+                                            {formatCurrency(
+                                                day.budget_total_cents,
+                                            )}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="space-y-2 py-3">
+                                    {day.entries.map((entry) => (
+                                        <div
+                                            key={entry.campaign_id}
+                                            className="flex items-center justify-between gap-3 text-sm"
+                                        >
+                                            <span className="flex min-w-0 items-center gap-2">
+                                                <span
+                                                    className={cn(
+                                                        'size-1.5 shrink-0 rounded-full',
+                                                        entry.actual_spend_cents ===
+                                                            null
+                                                            ? 'bg-primary'
+                                                            : 'bg-emerald-500',
+                                                    )}
+                                                />
+                                                <span className="truncate">
+                                                    {entry.campaign_name}
+                                                </span>
+                                            </span>
+                                            <span className="shrink-0 font-medium tabular-nums">
+                                                {formatCurrency(
+                                                    entry.budget_cents,
+                                                )}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="flex items-center justify-end gap-1 border-t pt-3 text-xs font-medium text-primary">
+                                    Abrir dia
+                                    <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                )}
+            </CardContent>
+
+            <div className="hidden xl:block">
+                <div className="grid grid-cols-7 border-b bg-muted/35 text-center text-xs font-medium text-muted-foreground">
+                    {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(
+                        (weekday) => (
+                            <div key={weekday} className="px-2 py-2.5">
+                                {weekday}
+                            </div>
+                        ),
+                    )}
+                </div>
+                <div className="grid grid-cols-7 gap-px bg-border/70">
+                    {cells.map((cell, index) =>
+                        cell === null ? (
+                            <div
+                                key={`empty-${index}`}
+                                className="min-h-32 bg-muted/15"
+                                aria-hidden="true"
+                            />
+                        ) : (
+                            <CalendarCell
+                                key={cell.date}
+                                date={cell.date}
+                                dayNumber={cell.dayNumber}
+                                details={cell.details}
+                                selected={cell.date === selectedDate}
+                            />
+                        ),
+                    )}
+                </div>
+            </div>
+        </Card>
+    );
+}
+
+function CalendarCell({
+    date,
+    dayNumber,
+    details,
+    selected,
+}: {
+    date: string;
+    dayNumber: number;
+    details: CalendarDay | undefined;
+    selected: boolean;
+}) {
+    return (
+        <Link
+            href={`/investimentos?date=${date}`}
+            className={cn(
+                'min-h-32 bg-card p-2.5 transition-colors hover:z-10 hover:bg-muted/45 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+                details && 'bg-primary/[0.025]',
+                selected && 'z-10 bg-primary/[0.07] ring-2 ring-primary',
+            )}
+        >
+            <div className="flex items-start justify-between gap-2">
+                <span
+                    className={cn(
+                        'flex size-6 items-center justify-center rounded-full text-xs font-medium',
+                        selected && 'bg-primary text-primary-foreground',
+                    )}
+                >
+                    {dayNumber}
+                </span>
+                {details && (
+                    <span className="text-xs font-semibold tabular-nums">
+                        {formatCurrency(details.budget_total_cents)}
+                    </span>
+                )}
+            </div>
+
+            {details ? (
+                <div className="mt-2 space-y-1.5">
+                    {details.entries.map((entry) => (
+                        <div
+                            key={entry.campaign_id}
+                            className="rounded-md bg-muted/70 px-2 py-1.5"
+                            title={`${entry.campaign_name}: ${formatCurrency(entry.budget_cents)}`}
+                        >
+                            <div className="flex items-center gap-1.5">
+                                <span
+                                    className={cn(
+                                        'size-1.5 shrink-0 rounded-full',
+                                        entry.actual_spend_cents === null
+                                            ? 'bg-primary'
+                                            : 'bg-emerald-500',
+                                    )}
+                                />
+                                <p className="truncate text-[11px] text-muted-foreground">
+                                    {entry.campaign_name}
+                                </p>
+                            </div>
+                            <p className="mt-0.5 text-xs font-medium tabular-nums">
+                                {formatCurrency(entry.budget_cents)}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <p className="mt-3 text-[11px] text-muted-foreground/65">
+                    Sem orçamento
+                </p>
+            )}
+        </Link>
+    );
+}
+
+function buildCalendarCells(calendar: BudgetCalendar) {
+    const [year, month] = calendar.month.split('-').map(Number);
+    const firstWeekday = (new Date(year, month - 1, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const totalCells = Math.ceil((firstWeekday + daysInMonth) / 7) * 7;
+    const daysByDate = new Map(calendar.days.map((day) => [day.date, day]));
+
+    return Array.from({ length: totalCells }, (_, index) => {
+        const dayNumber = index - firstWeekday + 1;
+
+        if (dayNumber < 1 || dayNumber > daysInMonth) {
+            return null;
+        }
+
+        const date = `${year}-${String(month).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
+
+        return {
+            date,
+            dayNumber,
+            details: daysByDate.get(date),
+        };
+    });
+}
+
+function formatMonth(month: string) {
+    const [year, monthNumber] = month.split('-').map(Number);
+
+    return new Intl.DateTimeFormat('pt-BR', {
+        month: 'long',
+        year: 'numeric',
+    }).format(new Date(year, monthNumber - 1, 1, 12));
+}
