@@ -120,6 +120,10 @@ export default function Dashboard({
             day.ad_spend_cents,
         ]),
     );
+    const dailyRows = [...daily].reverse();
+    const activeDays = daily.filter(
+        (day) => day.orders > 0 || day.ad_spend_cents > 0,
+    ).length;
 
     function filter(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -490,12 +494,27 @@ export default function Dashboard({
                 </Card>
 
                 <div className="grid gap-6 xl:grid-cols-2">
-                    <Card className="gap-0 overflow-hidden py-0 shadow-xs">
-                        <CardHeader className="border-b py-5">
-                            <CardTitle>Fechamento por dia</CardTitle>
-                            <CardDescription>
-                                Lucro depois de produto e mídia.
-                            </CardDescription>
+                    <Card className="gap-0 overflow-hidden py-0 shadow-xs xl:col-span-2">
+                        <CardHeader className="items-start justify-between gap-4 border-b py-5 sm:flex-row sm:items-center">
+                            <div className="space-y-1.5">
+                                <CardTitle>Fechamento por dia</CardTitle>
+                                <CardDescription>
+                                    Resultados completos de{' '}
+                                    {formatDate(filters.start_date)} a{' '}
+                                    {formatDate(filters.end_date)}, incluindo
+                                    dias sem movimento.
+                                </CardDescription>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                <Badge variant="secondary">
+                                    {formatNumber(daily.length)}{' '}
+                                    {daily.length === 1 ? 'dia' : 'dias'} no
+                                    período
+                                </Badge>
+                                <Badge variant="outline">
+                                    {formatNumber(activeDays)} com movimento
+                                </Badge>
+                            </div>
                         </CardHeader>
                         <Table className="responsive-table">
                             <TableHeader>
@@ -508,53 +527,119 @@ export default function Dashboard({
                                         Faturamento
                                     </TableHead>
                                     <TableHead className="text-right">
+                                        Produto
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Mídia
+                                    </TableHead>
+                                    <TableHead className="text-right">
                                         Lucro
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Margem
                                     </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {daily
-                                    .filter(
-                                        (day) =>
-                                            day.orders > 0 ||
-                                            day.ad_spend_cents > 0,
-                                    )
-                                    .slice(-8)
-                                    .reverse()
-                                    .map((day) => (
-                                        <TableRow key={day.date}>
+                                {dailyRows.map((day) => {
+                                    const hasMovement =
+                                        day.orders > 0 ||
+                                        day.ad_spend_cents > 0;
+                                    const marginPercentage =
+                                        day.revenue_cents > 0
+                                            ? (day.profit_cents /
+                                                  day.revenue_cents) *
+                                              100
+                                            : null;
+
+                                    return (
+                                        <TableRow
+                                            key={day.date}
+                                            className={cn(
+                                                !hasMovement &&
+                                                    'bg-muted/20 text-muted-foreground',
+                                            )}
+                                        >
                                             <TableCell data-primary>
-                                                {formatDate(day.date)}
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <span
+                                                        className={cn(
+                                                            hasMovement &&
+                                                                'font-medium',
+                                                        )}
+                                                    >
+                                                        {formatDate(day.date)}
+                                                    </span>
+                                                    {!hasMovement && (
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="font-normal text-muted-foreground"
+                                                        >
+                                                            Sem movimento
+                                                        </Badge>
+                                                    )}
+                                                </div>
                                             </TableCell>
                                             <TableCell
                                                 data-label="Vendas"
-                                                className="text-right"
+                                                className="text-right tabular-nums"
                                             >
-                                                {day.orders}
+                                                {formatNumber(day.orders)}
                                             </TableCell>
                                             <TableCell
                                                 data-label="Faturamento"
-                                                className="text-right"
+                                                className="text-right font-medium tabular-nums"
                                             >
                                                 {formatCurrency(
                                                     day.revenue_cents,
                                                 )}
                                             </TableCell>
                                             <TableCell
+                                                data-label="Produto"
+                                                className="text-right tabular-nums"
+                                            >
+                                                {formatCurrency(
+                                                    day.product_cost_cents,
+                                                )}
+                                            </TableCell>
+                                            <TableCell
+                                                data-label="Mídia"
+                                                className="text-right tabular-nums"
+                                            >
+                                                {formatCurrency(
+                                                    day.ad_spend_cents,
+                                                )}
+                                            </TableCell>
+                                            <TableCell
                                                 data-label="Lucro"
                                                 className="text-right"
                                             >
-                                                <ProfitBadge
-                                                    value={day.profit_cents}
-                                                />
+                                                {hasMovement ? (
+                                                    <ProfitBadge
+                                                        value={day.profit_cents}
+                                                    />
+                                                ) : (
+                                                    <span className="text-muted-foreground">
+                                                        —
+                                                    </span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell
+                                                data-label="Margem"
+                                                className="text-right tabular-nums"
+                                            >
+                                                {formatPercentage(
+                                                    marginPercentage,
+                                                )}
                                             </TableCell>
                                         </TableRow>
-                                    ))}
+                                    );
+                                })}
                             </TableBody>
                         </Table>
                     </Card>
 
-                    <Card className="gap-0 overflow-hidden py-0 shadow-xs">
+                    <Card className="gap-0 overflow-hidden py-0 shadow-xs xl:col-span-2">
                         <CardHeader className="items-start justify-between border-b py-5 sm:flex-row sm:items-center">
                             <div className="space-y-1.5">
                                 <CardTitle>Vendas recentes</CardTitle>
