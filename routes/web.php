@@ -3,6 +3,7 @@
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\CampaignSpendController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ConsolidatedController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\ProductController;
@@ -15,6 +16,7 @@ Route::get('/', fn () => auth()->check()
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
+    Route::get('consolidado', ConsolidatedController::class)->name('consolidated');
 
     Route::get('categorias', [CategoryController::class, 'index'])->name('categories.index');
     Route::post('categorias', [CategoryController::class, 'store'])->name('categories.store');

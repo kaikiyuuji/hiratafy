@@ -11,6 +11,7 @@ Controle manual de faturamento, custo de produto e investimento em campanhas par
 5. Antes das vendas, informe o orçamento de cada campanha no dia de operação.
 6. Registre as vendas e atribua a campanha responsável, quando houver.
 7. Complete o gasto real das campanhas quando o fechamento da plataforma estiver disponível.
+8. Use o Consolidado para simular o resultado de todas as vendas com um único investimento total em mídia.
 
 ## Regras financeiras
 
@@ -22,6 +23,8 @@ Controle manual de faturamento, custo de produto e investimento em campanhas par
 - O gasto real da campanha substitui o orçamento. Enquanto não houver gasto real, o orçamento entra nos relatórios.
 - O lucro diário e por campanha é `faturamento - custo de produtos - investimento em campanha`.
 - Cada venda guarda um snapshot financeiro para que alterações futuras no catálogo não modifiquem o histórico.
+- O Consolidado ignora campanhas e frete, usando `receita líquida dos produtos - custo dos produtos - investimento total informado`.
+- O investimento do Consolidado é apenas visual: não é salvo nem altera os relatórios existentes.
 
 ## Desenvolvimento
 

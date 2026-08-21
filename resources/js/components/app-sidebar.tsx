@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import {
     BadgePercent,
+    ChartPie,
     ChartNoAxesCombined,
     LayoutDashboard,
     Megaphone,
@@ -30,6 +31,11 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: '/dashboard',
         icon: LayoutDashboard,
+    },
+    {
+        title: 'Consolidado',
+        href: '/consolidado',
+        icon: ChartPie,
     },
     {
         title: 'Vendas',
