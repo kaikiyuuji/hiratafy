@@ -26,6 +26,7 @@ class SaleController extends Controller
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'campaign_id' => ['nullable', 'integer'],
+            'items_count' => ['nullable', 'integer', 'min:1', 'max:5000000'],
             'search' => ['nullable', 'string', 'max:100'],
         ]);
         $user = $request->user();
@@ -37,12 +38,21 @@ class SaleController extends Controller
             ? $request->string('end_date')->toString()
             : now()->toDateString();
         $campaignId = $request->filled('campaign_id') ? $request->integer('campaign_id') : null;
+        $itemsCount = $request->filled('items_count') ? $request->integer('items_count') : null;
         $search = $request->string('search')->trim()->toString();
 
         $sales = Sale::query()
             ->where('user_id', $user->id)
             ->whereBetween('sold_at', ["{$startDate} 00:00:00", "{$endDate} 23:59:59"])
             ->when($campaignId !== null, fn ($query) => $query->where('campaign_id', $campaignId))
+            ->when($itemsCount !== null, fn ($query) => $query->whereIn(
+                'sales.id',
+                fn ($itemsQuery) => $itemsQuery
+                    ->select('sale_id')
+                    ->from('sale_items')
+                    ->groupBy('sale_id')
+                    ->havingRaw('SUM(quantity) = ?', [$itemsCount]),
+            ))
             ->when($search !== '', fn ($query) => $query->where(
                 fn ($nested) => $nested
                     ->where('order_number', 'like', "%{$search}%")
@@ -87,6 +97,7 @@ class SaleController extends Controller
                 'start_date' => $startDate,
                 'end_date' => $endDate,
                 'campaign_id' => $campaignId,
+                'items_count' => $itemsCount,
                 'search' => $search,
             ],
         ]);

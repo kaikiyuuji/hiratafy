@@ -42,6 +42,7 @@ type Props = {
         start_date: string;
         end_date: string;
         campaign_id: number | null;
+        items_count: number | null;
         search: string;
     };
 };
@@ -51,6 +52,9 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
     const [endDate, setEndDate] = useState(filters.end_date);
     const [campaignId, setCampaignId] = useState(
         filters.campaign_id === null ? 'all' : String(filters.campaign_id),
+    );
+    const [itemsCount, setItemsCount] = useState(
+        filters.items_count === null ? '' : String(filters.items_count),
     );
     const [search, setSearch] = useState(filters.search);
     const [deleting, setDeleting] = useState<SaleRow | null>(null);
@@ -63,6 +67,7 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                 start_date: startDate,
                 end_date: endDate,
                 campaign_id: campaignId === 'all' ? '' : campaignId,
+                items_count: itemsCount,
                 search,
             },
             { preserveState: true, replace: true },
@@ -99,7 +104,7 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                 <Card className="py-4 shadow-xs">
                     <form
                         onSubmit={filter}
-                        className="grid gap-3 px-4 sm:grid-cols-2 xl:grid-cols-[160px_160px_220px_minmax(220px,1fr)_auto] xl:items-end"
+                        className="grid gap-3 px-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-[150px_150px_200px_140px_minmax(180px,1fr)_auto] 2xl:items-end"
                     >
                         <div className="grid gap-1.5">
                             <label
@@ -161,6 +166,27 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                         </div>
                         <div className="grid gap-1.5">
                             <label
+                                htmlFor="items_count"
+                                className="text-xs font-medium text-muted-foreground"
+                            >
+                                Número de itens
+                            </label>
+                            <Input
+                                id="items_count"
+                                type="number"
+                                min="1"
+                                max="5000000"
+                                step="1"
+                                inputMode="numeric"
+                                value={itemsCount}
+                                onChange={(event) =>
+                                    setItemsCount(event.target.value)
+                                }
+                                placeholder="Ex.: 6"
+                            />
+                        </div>
+                        <div className="grid gap-1.5">
+                            <label
                                 htmlFor="search"
                                 className="text-xs font-medium text-muted-foreground"
                             >
@@ -179,7 +205,11 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                                 />
                             </div>
                         </div>
-                        <Button type="submit" variant="outline">
+                        <Button
+                            type="submit"
+                            variant="outline"
+                            className="self-end"
+                        >
                             Filtrar
                         </Button>
                     </form>
