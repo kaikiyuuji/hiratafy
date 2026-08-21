@@ -357,7 +357,7 @@ export default function SaleForm({
                         </Card>
 
                         <Card className="shadow-xs">
-                            <CardHeader className="flex-row items-start justify-between gap-4">
+                            <CardHeader className="items-stretch justify-between gap-4 sm:flex-row sm:items-start">
                                 <div className="space-y-1.5">
                                     <CardTitle>Produtos</CardTitle>
                                     <CardDescription>
@@ -396,7 +396,7 @@ export default function SaleForm({
                                     return (
                                         <div
                                             key={index}
-                                            className="grid grid-cols-3 items-start gap-4 rounded-lg border p-4 md:grid-cols-[minmax(220px,1fr)_130px_auto]"
+                                            className="grid grid-cols-3 items-start gap-3 rounded-lg border p-3 sm:gap-4 sm:p-4 md:grid-cols-[minmax(220px,1fr)_130px_auto]"
                                         >
                                             <div className="col-span-3 grid gap-2 md:col-span-1">
                                                 <Label>Produto</Label>
@@ -642,7 +642,7 @@ export default function SaleForm({
                                     value={`− ${formatCurrency(preview.product_cost_cents)}`}
                                 />
                                 <div className="border-t pt-4">
-                                    <div className="flex items-end justify-between gap-3">
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                                         <div>
                                             <p className="font-medium">
                                                 Margem bruta da venda
@@ -653,7 +653,7 @@ export default function SaleForm({
                                         </div>
                                         <p
                                             className={cn(
-                                                'text-xl font-semibold',
+                                                'text-xl font-semibold break-words tabular-nums',
                                                 preview.gross_profit_cents >= 0
                                                     ? 'text-emerald-600 dark:text-emerald-400'
                                                     : 'text-destructive',

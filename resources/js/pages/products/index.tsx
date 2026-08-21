@@ -53,7 +53,10 @@ export default function ProductsIndex({
                     }
                 />
 
-                <form onSubmit={submitSearch} className="flex max-w-md gap-2">
+                <form
+                    onSubmit={submitSearch}
+                    className="flex max-w-md flex-col gap-2 sm:flex-row"
+                >
                     <div className="relative flex-1">
                         <Search className="absolute top-2.5 left-3 size-4 text-muted-foreground" />
                         <Input
@@ -93,7 +96,7 @@ export default function ProductsIndex({
                             }
                         />
                     ) : (
-                        <Table>
+                        <Table className="responsive-table">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Produto</TableHead>
@@ -120,7 +123,7 @@ export default function ProductsIndex({
 
                                     return (
                                         <TableRow key={product.id}>
-                                            <TableCell>
+                                            <TableCell data-primary>
                                                 <p className="font-medium">
                                                     {product.name}
                                                 </p>
@@ -130,28 +133,37 @@ export default function ProductsIndex({
                                                     </p>
                                                 )}
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell data-label="Categoria">
                                                 {product.category_name}
                                             </TableCell>
-                                            <TableCell className="text-right font-medium">
+                                            <TableCell
+                                                data-label="Preço"
+                                                className="text-right font-medium"
+                                            >
                                                 {formatCurrency(
                                                     product.sale_price_cents,
                                                 )}
                                             </TableCell>
-                                            <TableCell className="text-right">
+                                            <TableCell
+                                                data-label="Custo-base"
+                                                className="text-right"
+                                            >
                                                 {formatCurrency(
                                                     product.base_cost_cents,
                                                 )}
                                             </TableCell>
-                                            <TableCell className="text-right text-emerald-600 dark:text-emerald-400">
+                                            <TableCell
+                                                data-label="Margem bruta"
+                                                className="text-right text-emerald-600 dark:text-emerald-400"
+                                            >
                                                 {formatCurrency(margin)}
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell data-label="Faixas de custo">
                                                 {product.cost_tiers.length === 0
                                                     ? '—'
                                                     : `${product.cost_tiers.length} faixa${product.cost_tiers.length > 1 ? 's' : ''}`}
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell data-label="Status">
                                                 <Badge
                                                     variant={
                                                         product.is_active
@@ -164,7 +176,7 @@ export default function ProductsIndex({
                                                         : 'Inativo'}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell data-actions>
                                                 <Button
                                                     asChild
                                                     variant="ghost"

@@ -251,7 +251,7 @@ export default function Dashboard({
                 ) : (
                     <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,0.55fr)]">
                         <Card className="min-w-0 shadow-xs">
-                            <CardHeader className="flex-row items-start justify-between gap-4">
+                            <CardHeader className="items-start justify-between gap-4 sm:flex-row">
                                 <div className="space-y-1.5">
                                     <CardTitle>Ritmo diário</CardTitle>
                                     <CardDescription>
@@ -365,7 +365,7 @@ export default function Dashboard({
                 )}
 
                 <Card className="gap-0 overflow-hidden py-0 shadow-xs">
-                    <CardHeader className="flex-row items-center justify-between border-b py-5">
+                    <CardHeader className="items-start justify-between border-b py-5 sm:flex-row sm:items-center">
                         <div className="space-y-1.5">
                             <CardTitle>Desempenho por campanha</CardTitle>
                             <CardDescription>
@@ -386,7 +386,7 @@ export default function Dashboard({
                             description="Campanhas aparecem aqui quando possuem investimento ou vendas no período."
                         />
                     ) : (
-                        <Table>
+                        <Table className="responsive-table">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Campanha</TableHead>
@@ -416,7 +416,7 @@ export default function Dashboard({
                             <TableBody>
                                 {campaigns.map((campaign) => (
                                     <TableRow key={campaign.id}>
-                                        <TableCell>
+                                        <TableCell data-primary>
                                             <div>
                                                 <p className="font-medium">
                                                     {campaign.name}
@@ -426,37 +426,58 @@ export default function Dashboard({
                                                 </p>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="text-right">
+                                        <TableCell
+                                            data-label="Vendas"
+                                            className="text-right"
+                                        >
                                             {formatNumber(campaign.orders)}
                                         </TableCell>
-                                        <TableCell className="text-right font-medium">
+                                        <TableCell
+                                            data-label="Faturamento"
+                                            className="text-right font-medium"
+                                        >
                                             {formatCurrency(
                                                 campaign.revenue_cents,
                                             )}
                                         </TableCell>
-                                        <TableCell className="text-right">
+                                        <TableCell
+                                            data-label="Mídia"
+                                            className="text-right"
+                                        >
                                             {formatCurrency(
                                                 campaign.ad_spend_cents,
                                             )}
                                         </TableCell>
-                                        <TableCell className="text-right">
+                                        <TableCell
+                                            data-label="Produto"
+                                            className="text-right"
+                                        >
                                             {formatCurrency(
                                                 campaign.product_cost_cents,
                                             )}
                                         </TableCell>
-                                        <TableCell className="text-right">
+                                        <TableCell
+                                            data-label="ROAS"
+                                            className="text-right"
+                                        >
                                             {campaign.roas === null
                                                 ? '—'
                                                 : `${campaign.roas.toFixed(2)}x`}
                                         </TableCell>
-                                        <TableCell className="text-right">
+                                        <TableCell
+                                            data-label="CPA"
+                                            className="text-right"
+                                        >
                                             {campaign.cpa_cents === null
                                                 ? '—'
                                                 : formatCurrency(
                                                       campaign.cpa_cents,
                                                   )}
                                         </TableCell>
-                                        <TableCell className="text-right">
+                                        <TableCell
+                                            data-label="Lucro"
+                                            className="text-right"
+                                        >
                                             <ProfitBadge
                                                 value={campaign.profit_cents}
                                             />
@@ -476,7 +497,7 @@ export default function Dashboard({
                                 Lucro depois de produto e mídia.
                             </CardDescription>
                         </CardHeader>
-                        <Table>
+                        <Table className="responsive-table">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Dia</TableHead>
@@ -502,18 +523,27 @@ export default function Dashboard({
                                     .reverse()
                                     .map((day) => (
                                         <TableRow key={day.date}>
-                                            <TableCell>
+                                            <TableCell data-primary>
                                                 {formatDate(day.date)}
                                             </TableCell>
-                                            <TableCell className="text-right">
+                                            <TableCell
+                                                data-label="Vendas"
+                                                className="text-right"
+                                            >
                                                 {day.orders}
                                             </TableCell>
-                                            <TableCell className="text-right">
+                                            <TableCell
+                                                data-label="Faturamento"
+                                                className="text-right"
+                                            >
                                                 {formatCurrency(
                                                     day.revenue_cents,
                                                 )}
                                             </TableCell>
-                                            <TableCell className="text-right">
+                                            <TableCell
+                                                data-label="Lucro"
+                                                className="text-right"
+                                            >
                                                 <ProfitBadge
                                                     value={day.profit_cents}
                                                 />
@@ -525,7 +555,7 @@ export default function Dashboard({
                     </Card>
 
                     <Card className="gap-0 overflow-hidden py-0 shadow-xs">
-                        <CardHeader className="flex-row items-center justify-between border-b py-5">
+                        <CardHeader className="items-start justify-between border-b py-5 sm:flex-row sm:items-center">
                             <div className="space-y-1.5">
                                 <CardTitle>Vendas recentes</CardTitle>
                                 <CardDescription>
@@ -543,7 +573,7 @@ export default function Dashboard({
                                 description="Ajuste as datas ou registre uma nova venda."
                             />
                         ) : (
-                            <Table>
+                            <Table className="responsive-table">
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Pedido</TableHead>
@@ -556,7 +586,7 @@ export default function Dashboard({
                                 <TableBody>
                                     {recent_sales.map((sale) => (
                                         <TableRow key={sale.id}>
-                                            <TableCell>
+                                            <TableCell data-primary>
                                                 <Link
                                                     href={`/vendas/${sale.id}/editar`}
                                                     className="font-medium hover:underline"
@@ -570,14 +600,17 @@ export default function Dashboard({
                                                     )}
                                                 </p>
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell data-label="Campanha">
                                                 {sale.campaign_name ?? (
                                                     <span className="text-muted-foreground">
                                                         Orgânica
                                                     </span>
                                                 )}
                                             </TableCell>
-                                            <TableCell className="text-right font-medium">
+                                            <TableCell
+                                                data-label="Faturamento"
+                                                className="text-right font-medium"
+                                            >
                                                 {formatCurrency(
                                                     sale.revenue_cents,
                                                 )}

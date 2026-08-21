@@ -17,12 +17,12 @@ export function MetricCard({
 }) {
     return (
         <Card className="gap-0 py-0 shadow-xs">
-            <CardContent className="flex items-start justify-between p-5">
+            <CardContent className="flex items-start justify-between gap-3 p-4 sm:p-5">
                 <div className="min-w-0 space-y-1">
                     <p className="text-sm text-muted-foreground">{label}</p>
                     <p
                         className={cn(
-                            'truncate text-2xl font-semibold tracking-tight',
+                            'text-xl font-semibold tracking-tight break-words tabular-nums sm:text-2xl',
                             {
                                 'text-emerald-600 dark:text-emerald-400':
                                     tone === 'positive',

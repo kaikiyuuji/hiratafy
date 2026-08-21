@@ -35,7 +35,7 @@ export default function CampaignsIndex({
                     title="Campanhas"
                     description="Organize as campanhas usadas para atribuir investimento e faturamento."
                     actions={
-                        <div className="flex gap-2">
+                        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                             <Button asChild variant="outline">
                                 <Link href="/investimentos">
                                     <WalletCards /> Investimentos
@@ -65,7 +65,7 @@ export default function CampaignsIndex({
                             }
                         />
                     ) : (
-                        <Table>
+                        <Table className="responsive-table">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Campanha</TableHead>
@@ -84,13 +84,16 @@ export default function CampaignsIndex({
                             <TableBody>
                                 {campaigns.map((campaign) => (
                                     <TableRow key={campaign.id}>
-                                        <TableCell className="font-medium">
+                                        <TableCell
+                                            data-primary
+                                            className="font-medium"
+                                        >
                                             {campaign.name}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell data-label="Plataforma">
                                             {campaign.platform}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell data-label="Período">
                                             {campaign.starts_on ||
                                             campaign.ends_on ? (
                                                 <span className="flex items-center gap-2">
@@ -113,15 +116,21 @@ export default function CampaignsIndex({
                                                 </span>
                                             )}
                                         </TableCell>
-                                        <TableCell className="text-right">
+                                        <TableCell
+                                            data-label="Dias registrados"
+                                            className="text-right"
+                                        >
                                             {formatNumber(
                                                 campaign.daily_spends_count,
                                             )}
                                         </TableCell>
-                                        <TableCell className="text-right">
+                                        <TableCell
+                                            data-label="Vendas"
+                                            className="text-right"
+                                        >
                                             {formatNumber(campaign.sales_count)}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell data-label="Status">
                                             <Badge
                                                 variant={
                                                     campaign.is_active
@@ -134,7 +143,7 @@ export default function CampaignsIndex({
                                                     : 'Pausada'}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell data-actions>
                                             <Button
                                                 asChild
                                                 variant="ghost"

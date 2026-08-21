@@ -286,7 +286,7 @@ export default function ProductForm({
                         </Card>
 
                         <Card className="shadow-xs">
-                            <CardHeader className="flex-row items-start justify-between gap-4">
+                            <CardHeader className="items-stretch justify-between gap-4 sm:flex-row sm:items-start">
                                 <div className="space-y-1.5">
                                     <CardTitle>
                                         Faixas de custo do fornecedor

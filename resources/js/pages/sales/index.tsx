@@ -201,7 +201,7 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                         />
                     ) : (
                         <>
-                            <Table>
+                            <Table className="responsive-table">
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Pedido</TableHead>
@@ -228,7 +228,7 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                                 <TableBody>
                                     {sales.data.map((sale) => (
                                         <TableRow key={sale.id}>
-                                            <TableCell>
+                                            <TableCell data-primary>
                                                 <p className="font-medium">
                                                     {sale.order_number ??
                                                         `Venda #${sale.id}`}
@@ -239,10 +239,10 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                                                     </p>
                                                 )}
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell data-label="Data">
                                                 {formatDateTime(sale.sold_at)}
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell data-label="Campanha">
                                                 {sale.campaign_name ? (
                                                     <Badge variant="outline">
                                                         {sale.campaign_name}
@@ -253,25 +253,38 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                                                     </span>
                                                 )}
                                             </TableCell>
-                                            <TableCell className="text-right">
+                                            <TableCell
+                                                data-label="Itens"
+                                                className="text-right"
+                                            >
                                                 {formatNumber(sale.items_count)}
                                             </TableCell>
-                                            <TableCell className="text-right">
+                                            <TableCell
+                                                data-label="Desconto"
+                                                className="text-right"
+                                            >
                                                 {sale.discount_cents > 0
                                                     ? `− ${formatCurrency(sale.discount_cents)}`
                                                     : '—'}
                                             </TableCell>
-                                            <TableCell className="text-right font-medium">
+                                            <TableCell
+                                                data-label="Faturamento"
+                                                className="text-right font-medium"
+                                            >
                                                 {formatCurrency(
                                                     sale.revenue_cents,
                                                 )}
                                             </TableCell>
-                                            <TableCell className="text-right">
+                                            <TableCell
+                                                data-label="Custo"
+                                                className="text-right"
+                                            >
                                                 {formatCurrency(
                                                     sale.product_cost_cents,
                                                 )}
                                             </TableCell>
                                             <TableCell
+                                                data-label="Margem bruta"
                                                 className={cn(
                                                     'text-right font-medium',
                                                     sale.gross_profit_cents >= 0
@@ -283,7 +296,7 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                                                     sale.gross_profit_cents,
                                                 )}
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell data-actions>
                                                 <div className="flex justify-end">
                                                     <Button
                                                         asChild
@@ -319,7 +332,7 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                                     {sales.from}–{sales.to} de{' '}
                                     {formatNumber(sales.total)} vendas
                                 </span>
-                                <div className="flex gap-2">
+                                <div className="flex w-full gap-2 sm:w-auto [&>*]:flex-1">
                                     <Button
                                         asChild={sales.prev_page_url !== null}
                                         variant="outline"

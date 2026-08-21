@@ -99,7 +99,7 @@ export default function CategoriesIndex({
                             }
                         />
                     ) : (
-                        <Table>
+                        <Table className="responsive-table">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Nome</TableHead>
@@ -116,10 +116,13 @@ export default function CategoriesIndex({
                             <TableBody>
                                 {categories.map((category) => (
                                     <TableRow key={category.id}>
-                                        <TableCell className="font-medium">
+                                        <TableCell
+                                            data-primary
+                                            className="font-medium"
+                                        >
                                             {category.name}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell data-label="Status">
                                             <Badge
                                                 variant={
                                                     category.is_active
@@ -132,13 +135,19 @@ export default function CategoriesIndex({
                                                     : 'Inativa'}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="text-right">
+                                        <TableCell
+                                            data-label="Produtos"
+                                            className="text-right"
+                                        >
                                             {category.products_count}
                                         </TableCell>
-                                        <TableCell className="text-right">
+                                        <TableCell
+                                            data-label="Descontos"
+                                            className="text-right"
+                                        >
                                             {category.discounts_count}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell data-actions>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"

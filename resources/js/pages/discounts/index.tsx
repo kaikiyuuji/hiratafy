@@ -52,7 +52,7 @@ export default function DiscountsIndex({
                             }
                         />
                     ) : (
-                        <Table>
+                        <Table className="responsive-table">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Regra</TableHead>
@@ -66,13 +66,16 @@ export default function DiscountsIndex({
                             <TableBody>
                                 {discounts.map((discount) => (
                                     <TableRow key={discount.id}>
-                                        <TableCell className="font-medium">
+                                        <TableCell
+                                            data-primary
+                                            className="font-medium"
+                                        >
                                             {discount.name}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell data-label="Categoria">
                                             {discount.category_name}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell data-label="Faixas">
                                             <div className="flex flex-wrap gap-1.5">
                                                 {discount.tiers.map((tier) => (
                                                     <Badge
@@ -90,7 +93,7 @@ export default function DiscountsIndex({
                                                 ))}
                                             </div>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell data-label="Vigência">
                                             <div className="flex items-center gap-2 text-sm">
                                                 <CalendarRange className="size-4 text-muted-foreground" />
                                                 {discount.starts_on ||
@@ -115,7 +118,7 @@ export default function DiscountsIndex({
                                                 )}
                                             </div>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell data-label="Status">
                                             <Badge
                                                 variant={
                                                     discount.is_active
@@ -128,7 +131,7 @@ export default function DiscountsIndex({
                                                     : 'Inativo'}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell data-actions>
                                             <Button
                                                 asChild
                                                 variant="ghost"
