@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { DailyPerformanceChart } from '@/components/daily-performance-chart';
+import type { DailyMetric } from '@/components/daily-performance-chart';
 import { EmptyState } from '@/components/empty-state';
 import { FilterPanel } from '@/components/filter-panel';
 import { MetricCard } from '@/components/metric-card';
@@ -76,15 +78,6 @@ type CampaignMetric = {
     cpa_cents: number | null;
 };
 
-type DailyMetric = {
-    date: string;
-    orders: number;
-    revenue_cents: number;
-    product_cost_cents: number;
-    ad_spend_cents: number;
-    profit_cents: number;
-};
-
 type RecentSale = {
     id: number;
     order_number: string | null;
@@ -113,14 +106,6 @@ export default function Dashboard({
 }: Props) {
     const [startDate, setStartDate] = useState(filters.start_date);
     const [endDate, setEndDate] = useState(filters.end_date);
-    const chartMax = Math.max(
-        1,
-        ...daily.flatMap((day) => [
-            day.revenue_cents,
-            day.product_cost_cents,
-            day.ad_spend_cents,
-        ]),
-    );
     const dailyRows = [...daily].reverse();
     const activeDays = daily.filter(
         (day) => day.orders > 0 || day.ad_spend_cents > 0,
@@ -256,79 +241,7 @@ export default function Dashboard({
                     </Card>
                 ) : (
                     <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,0.55fr)]">
-                        <Card className="min-w-0 shadow-xs">
-                            <CardHeader className="items-start justify-between gap-4 sm:flex-row">
-                                <div className="space-y-1.5">
-                                    <CardTitle>Ritmo diário</CardTitle>
-                                    <CardDescription>
-                                        Receita comparada ao custo de produto e
-                                        à mídia.
-                                    </CardDescription>
-                                </div>
-                                <div className="hidden items-center gap-3 text-xs text-muted-foreground sm:flex">
-                                    <Legend
-                                        color="bg-emerald-500"
-                                        label="Receita"
-                                    />
-                                    <Legend
-                                        color="bg-amber-400"
-                                        label="Produto"
-                                    />
-                                    <Legend
-                                        color="bg-violet-500"
-                                        label="Mídia"
-                                    />
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="overflow-x-auto pb-2">
-                                    <div
-                                        className="flex h-56 min-w-full items-end gap-2 border-b px-1"
-                                        style={{
-                                            width: Math.max(
-                                                560,
-                                                daily.length * 38,
-                                            ),
-                                        }}
-                                    >
-                                        {daily.map((day) => (
-                                            <div
-                                                key={day.date}
-                                                className="group flex h-full min-w-7 flex-1 flex-col justify-end gap-1"
-                                                title={`${formatDate(day.date)} · Receita ${formatCurrency(day.revenue_cents)} · Produto ${formatCurrency(day.product_cost_cents)} · Mídia ${formatCurrency(day.ad_spend_cents)}`}
-                                            >
-                                                <div className="flex h-[184px] items-end justify-center gap-0.5">
-                                                    <ChartBar
-                                                        value={
-                                                            day.revenue_cents
-                                                        }
-                                                        max={chartMax}
-                                                        className="bg-emerald-500"
-                                                    />
-                                                    <ChartBar
-                                                        value={
-                                                            day.product_cost_cents
-                                                        }
-                                                        max={chartMax}
-                                                        className="bg-amber-400"
-                                                    />
-                                                    <ChartBar
-                                                        value={
-                                                            day.ad_spend_cents
-                                                        }
-                                                        max={chartMax}
-                                                        className="bg-violet-500"
-                                                    />
-                                                </div>
-                                                <span className="pb-2 text-center text-[10px] text-muted-foreground">
-                                                    {day.date.slice(8)}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <DailyPerformanceChart daily={daily} />
 
                         <Card className="shadow-xs">
                             <CardHeader>
@@ -711,36 +624,6 @@ export default function Dashboard({
                 </div>
             </div>
         </>
-    );
-}
-
-function Legend({ color, label }: { color: string; label: string }) {
-    return (
-        <span className="flex items-center gap-1.5">
-            <span className={cn('size-2 rounded-full', color)} /> {label}
-        </span>
-    );
-}
-
-function ChartBar({
-    value,
-    max,
-    className,
-}: {
-    value: number;
-    max: number;
-    className: string;
-}) {
-    return (
-        <div
-            className={cn(
-                'w-1.5 min-w-1 rounded-t-sm opacity-85 transition-opacity group-hover:opacity-100',
-                className,
-            )}
-            style={{
-                height: value > 0 ? `${Math.max(2, (value / max) * 100)}%` : 0,
-            }}
-        />
     );
 }
 
