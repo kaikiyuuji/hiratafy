@@ -89,6 +89,7 @@ type PreviewLine = {
     quantity: number;
     discount_basis_points: number;
     discount_cents: number;
+    cost_tier_min_quantity: number | null;
     unit_cost_cents: number;
     gross_cents: number;
     cost_cents: number;
@@ -361,8 +362,9 @@ export default function SaleForm({
                                 <div className="space-y-1.5">
                                     <CardTitle>Produtos</CardTitle>
                                     <CardDescription>
-                                        Preço, desconto e custo são puxados
-                                        automaticamente.
+                                        O desconto soma a categoria; o custo do
+                                        fornecedor usa cada produto
+                                        separadamente.
                                     </CardDescription>
                                 </div>
                                 <Button
@@ -504,7 +506,7 @@ export default function SaleForm({
                                                 }
                                             />
                                             <LineMetric
-                                                label="Desconto"
+                                                label="Desconto da categoria"
                                                 value={
                                                     line &&
                                                     line.discount_basis_points >
@@ -521,7 +523,7 @@ export default function SaleForm({
                                                 }
                                             />
                                             <LineMetric
-                                                label="Custo unit."
+                                                label="Custo do fornecedor"
                                                 value={
                                                     line
                                                         ? formatCurrency(
@@ -538,6 +540,13 @@ export default function SaleForm({
                                                             line.product
                                                                 .category_name
                                                         }
+                                                    </span>
+                                                    <span>
+                                                        Faixa do fornecedor:{' '}
+                                                        {line.cost_tier_min_quantity ===
+                                                        null
+                                                            ? 'custo-base'
+                                                            : `${line.cost_tier_min_quantity}+ unidades deste produto`}
                                                     </span>
                                                     <span>
                                                         Bruto:{' '}
@@ -785,6 +794,7 @@ function calculatePreview(
             quantity,
             discount_basis_points: discountBasisPoints,
             discount_cents: discount,
+            cost_tier_min_quantity: eligibleTier?.min_quantity ?? null,
             unit_cost_cents: unitCost,
             gross_cents: gross,
             cost_cents: unitCost * quantity,

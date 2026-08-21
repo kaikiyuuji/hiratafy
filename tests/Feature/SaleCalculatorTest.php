@@ -80,6 +80,60 @@ test('it applies the supplier unit cost tier for the product quantity', function
         ->and($result['items'][0]['unit_cost_cents'])->toBe(900);
 });
 
+test('category discounts aggregate products while supplier tiers stay per product', function () {
+    $user = User::factory()->create();
+    $category = Category::create([
+        'user_id' => $user->id,
+        'name' => 'DUMP',
+    ]);
+    $firstProduct = Product::create([
+        'user_id' => $user->id,
+        'category_id' => $category->id,
+        'name' => 'Dump A',
+        'sale_price_cents' => 2000,
+        'base_cost_cents' => 950,
+    ]);
+    $firstProduct->costTiers()->createMany([
+        ['min_quantity' => 3, 'unit_cost_cents' => 900],
+        ['min_quantity' => 6, 'unit_cost_cents' => 850],
+    ]);
+    $secondProduct = Product::create([
+        'user_id' => $user->id,
+        'category_id' => $category->id,
+        'name' => 'Dump B',
+        'sale_price_cents' => 1500,
+        'base_cost_cents' => 1000,
+    ]);
+    $secondProduct->costTiers()->createMany([
+        ['min_quantity' => 3, 'unit_cost_cents' => 925],
+        ['min_quantity' => 6, 'unit_cost_cents' => 875],
+    ]);
+    $discount = Discount::create([
+        'user_id' => $user->id,
+        'category_id' => $category->id,
+        'name' => 'Leve mais',
+    ]);
+    $discount->tiers()->createMany([
+        ['min_quantity' => 3, 'percentage_basis_points' => 1000],
+        ['min_quantity' => 6, 'percentage_basis_points' => 2000],
+    ]);
+
+    $result = app(SaleCalculator::class)->calculate($user, Carbon::parse('2026-08-20'), [
+        ['product_id' => $firstProduct->id, 'quantity' => 3],
+        ['product_id' => $secondProduct->id, 'quantity' => 4],
+    ]);
+
+    expect($result)
+        ->products_subtotal_cents->toBe(12000)
+        ->discount_cents->toBe(2400)
+        ->product_cost_cents->toBe(6400)
+        ->gross_profit_cents->toBe(3200)
+        ->and($result['items'][0]['discount_basis_points'])->toBe(2000)
+        ->and($result['items'][1]['discount_basis_points'])->toBe(2000)
+        ->and($result['items'][0]['unit_cost_cents'])->toBe(900)
+        ->and($result['items'][1]['unit_cost_cents'])->toBe(925);
+});
+
 test('free shipping uses the subtotal before discounts', function () {
     $user = User::factory()->create();
     StoreSetting::create([
