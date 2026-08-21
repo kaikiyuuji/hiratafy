@@ -100,6 +100,7 @@ class SaleController extends Controller
         return Inertia::render('sales/form', [
             ...$this->formProps($user),
             'sale' => null,
+            'nextOrderNumber' => $this->nextOrderNumber($user),
         ]);
     }
 
@@ -227,6 +228,25 @@ class SaleController extends Controller
                 'free_shipping_threshold_cents' => $settings->free_shipping_threshold_cents,
             ],
         ];
+    }
+
+    private function nextOrderNumber(User $user): string
+    {
+        $highestOrderNumber = 0;
+        $orderNumbers = Sale::query()
+            ->where('user_id', $user->id)
+            ->whereNotNull('order_number')
+            ->pluck('order_number');
+
+        foreach ($orderNumbers as $orderNumber) {
+            $numericOrderNumber = (string) $orderNumber;
+
+            if (ctype_digit($numericOrderNumber)) {
+                $highestOrderNumber = max($highestOrderNumber, (int) $numericOrderNumber);
+            }
+        }
+
+        return (string) ($highestOrderNumber + 1);
     }
 
     /** @return array<int, array<string, mixed>> */

@@ -107,6 +107,7 @@ type Preview = {
 
 type Props = {
     sale: ExistingSale | null;
+    nextOrderNumber?: string;
     products: CatalogProduct[];
     discounts: DiscountConfig[];
     campaigns: CampaignOption[];
@@ -115,6 +116,7 @@ type Props = {
 
 export default function SaleForm({
     sale,
+    nextOrderNumber,
     products,
     discounts,
     campaigns,
@@ -122,7 +124,7 @@ export default function SaleForm({
 }: Props) {
     const form = useForm<SaleFormData>({
         campaign_id: sale?.campaign_id ? String(sale.campaign_id) : '',
-        order_number: sale?.order_number ?? '',
+        order_number: sale?.order_number ?? nextOrderNumber ?? '',
         customer_name: sale?.customer_name ?? '',
         sold_at: sale?.sold_at ?? currentLocalDateTime(),
         notes: sale?.notes ?? '',
