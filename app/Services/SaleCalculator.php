@@ -14,6 +14,7 @@ class SaleCalculator
 {
     /**
      * @param  array<int, array{product_id: int, quantity: int}>  $rawItems
+     * @param  'automatic'|'charged'|'free'  $shippingMode
      * @return array{
      *     products_subtotal_cents: int,
      *     discount_cents: int,
@@ -24,8 +25,12 @@ class SaleCalculator
      *     items: array<int, array<string, int|string>>
      * }
      */
-    public function calculate(User $user, CarbonInterface $soldAt, array $rawItems): array
-    {
+    public function calculate(
+        User $user,
+        CarbonInterface $soldAt,
+        array $rawItems,
+        string $shippingMode = 'automatic',
+    ): array {
         $quantities = collect($rawItems)
             ->groupBy('product_id')
             ->map(fn (Collection $items): int => $items->sum('quantity'));
@@ -111,9 +116,13 @@ class SaleCalculator
         }
 
         $settings = StoreSetting::forUser($user);
-        $shipping = $subtotal >= $settings->free_shipping_threshold_cents
-            ? 0
-            : $settings->fixed_shipping_cents;
+        $shipping = match ($shippingMode) {
+            'charged' => $subtotal > 0 ? $settings->fixed_shipping_cents : 0,
+            'free' => 0,
+            default => $subtotal > 0 && $subtotal < $settings->free_shipping_threshold_cents
+                ? $settings->fixed_shipping_cents
+                : 0,
+        };
         $revenue = $subtotal - $discountTotal + $shipping;
 
         return [

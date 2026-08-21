@@ -24,6 +24,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -59,12 +60,14 @@ type StoreSettings = {
     fixed_shipping_cents: number;
     free_shipping_threshold_cents: number;
 };
+type ShippingMode = 'automatic' | 'charged' | 'free';
 type SaleItemInput = { product_id: string; quantity: string };
 type SaleFormData = {
     campaign_id: string;
     order_number: string;
     customer_name: string;
     sold_at: string;
+    shipping_mode: ShippingMode;
     notes: string;
     items: SaleItemInput[];
 };
@@ -74,6 +77,7 @@ type ExistingSale = {
     order_number: string | null;
     customer_name: string | null;
     sold_at: string;
+    shipping_mode: Exclude<ShippingMode, 'automatic'>;
     notes: string | null;
     products_subtotal_cents: number;
     discount_cents: number;
@@ -100,6 +104,7 @@ type Preview = {
     subtotal_cents: number;
     discount_cents: number;
     shipping_cents: number;
+    shipping_charged: boolean;
     revenue_cents: number;
     product_cost_cents: number;
     gross_profit_cents: number;
@@ -127,6 +132,7 @@ export default function SaleForm({
         order_number: sale?.order_number ?? nextOrderNumber ?? '',
         customer_name: sale?.customer_name ?? '',
         sold_at: sale?.sold_at ?? currentLocalDateTime(),
+        shipping_mode: sale?.shipping_mode ?? 'automatic',
         notes: sale?.notes ?? '',
         items:
             sale?.items.map((item) => ({
@@ -355,6 +361,61 @@ export default function SaleForm({
                                     <InputError
                                         message={form.errors.customer_name}
                                     />
+                                </div>
+                                <div className="flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between md:col-span-2 xl:col-span-4">
+                                    <div className="flex items-start gap-3">
+                                        <Checkbox
+                                            id="shipping_charged"
+                                            checked={preview.shipping_charged}
+                                            onCheckedChange={(checked) =>
+                                                form.setData(
+                                                    'shipping_mode',
+                                                    checked === true
+                                                        ? 'charged'
+                                                        : 'free',
+                                                )
+                                            }
+                                        />
+                                        <div className="grid gap-1">
+                                            <Label htmlFor="shipping_charged">
+                                                Frete cobrado do cliente
+                                            </Label>
+                                            <p className="text-xs text-muted-foreground">
+                                                {preview.shipping_charged
+                                                    ? `Soma ${formatCurrency(settings.fixed_shipping_cents)} ao faturamento deste pedido.`
+                                                    : 'Nenhum frete será somado ao faturamento deste pedido.'}
+                                            </p>
+                                            <InputError
+                                                message={
+                                                    form.errors.shipping_mode
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3 sm:justify-end">
+                                        <span className="text-xs text-muted-foreground">
+                                            {form.data.shipping_mode ===
+                                            'automatic'
+                                                ? 'Regra automática'
+                                                : 'Ajuste manual'}
+                                        </span>
+                                        {form.data.shipping_mode !==
+                                            'automatic' && (
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                    form.setData(
+                                                        'shipping_mode',
+                                                        'automatic',
+                                                    )
+                                                }
+                                            >
+                                                Usar automático
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
@@ -690,6 +751,8 @@ export default function SaleForm({
                                 no subtotal antes dos descontos. Abaixo disso, o
                                 valor fixo é{' '}
                                 {formatCurrency(settings.fixed_shipping_cents)}.
+                                O controle nos dados do pedido permite ajustar
+                                esta venda manualmente.
                             </AlertDescription>
                         </Alert>
 
@@ -817,10 +880,13 @@ function calculatePreview(
         (total, line) => total + line.cost_cents,
         0,
     );
-    const shipping =
-        subtotal > 0 && subtotal < settings.free_shipping_threshold_cents
-            ? settings.fixed_shipping_cents
-            : 0;
+    const automaticShippingCharged =
+        subtotal > 0 && subtotal < settings.free_shipping_threshold_cents;
+    const shippingCharged =
+        subtotal > 0 &&
+        (data.shipping_mode === 'charged' ||
+            (data.shipping_mode === 'automatic' && automaticShippingCharged));
+    const shipping = shippingCharged ? settings.fixed_shipping_cents : 0;
     const revenue = subtotal - discount + shipping;
 
     return {
@@ -828,6 +894,7 @@ function calculatePreview(
         subtotal_cents: subtotal,
         discount_cents: discount,
         shipping_cents: shipping,
+        shipping_charged: shippingCharged,
         revenue_cents: revenue,
         product_cost_cents: productCost,
         gross_profit_cents: revenue - productCost,

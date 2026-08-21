@@ -131,6 +131,7 @@ class SaleController extends Controller
                 'order_number' => $sale->order_number,
                 'customer_name' => $sale->customer_name,
                 'sold_at' => $sale->sold_at->format('Y-m-d\TH:i'),
+                'shipping_mode' => $sale->shipping_cents > 0 ? 'charged' : 'free',
                 'notes' => $sale->notes,
                 'products_subtotal_cents' => $sale->products_subtotal_cents,
                 'discount_cents' => $sale->discount_cents,

@@ -173,3 +173,39 @@ test('free shipping uses the subtotal before discounts', function () {
         ->shipping_cents->toBe(0)
         ->revenue_cents->toBe(8100);
 });
+
+test('shipping can be manually charged or waived for a sale', function () {
+    $user = User::factory()->create();
+    StoreSetting::create([
+        'user_id' => $user->id,
+        'currency' => 'USD',
+        'fixed_shipping_cents' => 1200,
+        'free_shipping_threshold_cents' => 9000,
+    ]);
+    $category = Category::create([
+        'user_id' => $user->id,
+        'name' => 'Products',
+    ]);
+    $product = Product::create([
+        'user_id' => $user->id,
+        'category_id' => $category->id,
+        'name' => 'Product',
+        'sale_price_cents' => 3000,
+        'base_cost_cents' => 900,
+    ]);
+    $calculator = app(SaleCalculator::class);
+
+    $charged = $calculator->calculate($user, Carbon::parse('2026-08-20'), [
+        ['product_id' => $product->id, 'quantity' => 3],
+    ], 'charged');
+    $waived = $calculator->calculate($user, Carbon::parse('2026-08-20'), [
+        ['product_id' => $product->id, 'quantity' => 1],
+    ], 'free');
+
+    expect($charged)
+        ->shipping_cents->toBe(1200)
+        ->revenue_cents->toBe(10200)
+        ->and($waived)
+        ->shipping_cents->toBe(0)
+        ->revenue_cents->toBe(3000);
+});

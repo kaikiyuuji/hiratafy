@@ -36,6 +36,7 @@ class SaleRequest extends FormRequest
             ],
             'customer_name' => ['nullable', 'string', 'max:150'],
             'sold_at' => ['required', 'date'],
+            'shipping_mode' => ['nullable', Rule::in(['automatic', 'charged', 'free'])],
             'notes' => ['nullable', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1', 'max:50'],
             'items.*.product_id' => [
@@ -56,6 +57,7 @@ class SaleRequest extends FormRequest
      *     order_number: string|null,
      *     customer_name: string|null,
      *     sold_at: string,
+     *     shipping_mode: 'automatic'|'charged'|'free',
      *     notes: string|null,
      *     items: array<int, array{product_id: int, quantity: int}>
      * }
@@ -75,6 +77,12 @@ class SaleRequest extends FormRequest
             ];
         }
 
+        $shippingMode = match ($this->string('shipping_mode')->toString()) {
+            'charged' => 'charged',
+            'free' => 'free',
+            default => 'automatic',
+        };
+
         return [
             'campaign_id' => $this->filled('campaign_id') ? $this->integer('campaign_id') : null,
             'order_number' => $this->filled('order_number')
@@ -84,6 +92,7 @@ class SaleRequest extends FormRequest
                 ? $this->string('customer_name')->trim()->toString()
                 : null,
             'sold_at' => $this->string('sold_at')->toString(),
+            'shipping_mode' => $shippingMode,
             'notes' => $this->filled('notes') ? $this->string('notes')->trim()->toString() : null,
             'items' => $items,
         ];

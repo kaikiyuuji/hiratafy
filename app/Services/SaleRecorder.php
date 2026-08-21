@@ -19,6 +19,7 @@ class SaleRecorder
      *     order_number: string|null,
      *     customer_name: string|null,
      *     sold_at: string,
+     *     shipping_mode?: 'automatic'|'charged'|'free',
      *     notes: string|null,
      *     items: array<int, array{product_id: int, quantity: int}>
      * }  $data
@@ -40,7 +41,12 @@ class SaleRecorder
             }
         }
 
-        $calculation = $this->calculator->calculate($user, $soldAt, $data['items']);
+        $calculation = $this->calculator->calculate(
+            $user,
+            $soldAt,
+            $data['items'],
+            $data['shipping_mode'] ?? 'automatic',
+        );
 
         return DB::transaction(function () use ($user, $data, $sale, $soldAt, $calculation): Sale {
             $sale ??= new Sale;
