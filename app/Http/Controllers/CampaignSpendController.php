@@ -67,17 +67,20 @@ class CampaignSpendController extends Controller
         }
 
         DB::transaction(function () use ($data): void {
+            $spendDate = Carbon::parse($data['spend_date'])->startOfDay();
+
             foreach ($data['entries'] as $entry) {
-                CampaignDailySpend::updateOrCreate(
-                    [
-                        'campaign_id' => $entry['campaign_id'],
-                        'spend_date' => $data['spend_date'],
-                    ],
-                    [
-                        'budget_cents' => $entry['budget_cents'],
-                        'actual_spend_cents' => $entry['actual_spend_cents'],
-                    ],
-                );
+                $spend = CampaignDailySpend::query()
+                    ->where('campaign_id', $entry['campaign_id'])
+                    ->whereDate('spend_date', $spendDate->toDateString())
+                    ->first() ?? new CampaignDailySpend;
+
+                $spend->fill([
+                    'campaign_id' => $entry['campaign_id'],
+                    'spend_date' => $spendDate,
+                    'budget_cents' => $entry['budget_cents'],
+                    'actual_spend_cents' => $entry['actual_spend_cents'],
+                ])->save();
             }
         });
 

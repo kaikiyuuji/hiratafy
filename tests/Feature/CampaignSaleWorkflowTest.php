@@ -111,6 +111,43 @@ test('daily investments and sales feed overall and campaign profitability', func
         ->where('campaigns.1.profit_cents', -4000));
 });
 
+test('adding a campaign to a filled day updates existing investments', function () {
+    $user = User::factory()->create();
+    $mainCampaign = Campaign::create([
+        'user_id' => $user->id,
+        'name' => 'Main',
+    ]);
+    $newCampaign = Campaign::create([
+        'user_id' => $user->id,
+        'name' => 'New',
+    ]);
+    $existingSpend = CampaignDailySpend::create([
+        'campaign_id' => $mainCampaign->id,
+        'spend_date' => '2026-08-18',
+        'budget_cents' => 25000,
+        'actual_spend_cents' => 24750,
+    ]);
+
+    $response = $this->actingAs($user)->post(route('campaign-spends.store'), [
+        'spend_date' => '2026-08-18',
+        'entries' => [
+            ['campaign_id' => $mainCampaign->id, 'budget' => '300.00', 'actual_spend' => null],
+            ['campaign_id' => $newCampaign->id, 'budget' => '40.00', 'actual_spend' => null],
+        ],
+    ]);
+
+    $response->assertRedirect(route('campaign-spends.index', ['date' => '2026-08-18']));
+    $this->assertDatabaseCount('campaign_daily_spends', 2);
+    expect($existingSpend->refresh())
+        ->budget_cents->toBe(30000)
+        ->actual_spend_cents->toBeNull();
+    $this->assertDatabaseHas('campaign_daily_spends', [
+        'campaign_id' => $newCampaign->id,
+        'budget_cents' => 4000,
+        'actual_spend_cents' => null,
+    ]);
+});
+
 test('actual spend replaces the planned budget in reports', function () {
     $user = User::factory()->create();
     $campaign = Campaign::create([
