@@ -24,7 +24,7 @@ export default function DiscountsIndex({
     return (
         <>
             <Head title="Descontos" />
-            <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+            <div className="flex flex-1 flex-col gap-4 p-3 sm:gap-6 sm:p-4 md:p-6">
                 <PageHeader
                     title="Descontos por quantidade"
                     description="Regras por categoria aplicadas automaticamente ao registrar uma venda."

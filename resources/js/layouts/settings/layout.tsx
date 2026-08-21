@@ -37,7 +37,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
 
     return (
-        <div className="px-4 py-6 md:px-6">
+        <div className="px-3 py-4 sm:px-4 sm:py-6 md:px-6">
             <Heading
                 title="Configurações"
                 description="Gerencie as regras do app e os dados da sua conta"

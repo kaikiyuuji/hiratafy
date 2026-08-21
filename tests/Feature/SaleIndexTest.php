@@ -33,6 +33,33 @@ test('sales can be filtered by their total item quantity', function () {
             ->where('sales.data.0.items_count', 5));
 });
 
+test('sales sorting is remembered when returning to the index', function () {
+    $user = User::factory()->create();
+    $zetaSale = createIndexedSale($user, '1001');
+    $zetaSale->update(['customer_name' => 'Zeta Customer']);
+    createIndexedSaleItem($zetaSale, 1, 'First product');
+    $alphaSale = createIndexedSale($user, '1002');
+    $alphaSale->update(['customer_name' => 'Alpha Customer']);
+    createIndexedSaleItem($alphaSale, 1, 'Second product');
+
+    $this->actingAs($user)
+        ->get(route('sales.index', [
+            'start_date' => '2026-08-01',
+            'end_date' => '2026-08-31',
+            'sort' => 'customer_asc',
+        ]))
+        ->assertOk();
+
+    $this->get(route('sales.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters.start_date', '2026-08-01')
+            ->where('filters.end_date', '2026-08-31')
+            ->where('filters.sort', 'customer_asc')
+            ->has('sales.data', 2)
+            ->where('sales.data.0.customer_name', 'Alpha Customer')
+            ->where('sales.data.1.customer_name', 'Zeta Customer'));
+});
+
 function createIndexedSale(User $user, string $orderNumber): Sale
 {
     return Sale::create([

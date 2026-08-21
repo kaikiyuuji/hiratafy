@@ -3,6 +3,7 @@ import { Package, Pencil, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { EmptyState } from '@/components/empty-state';
+import { FilterPanel } from '@/components/filter-panel';
 import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,7 +41,7 @@ export default function ProductsIndex({
     return (
         <>
             <Head title="Produtos" />
-            <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+            <div className="flex flex-1 flex-col gap-4 p-3 sm:gap-6 sm:p-4 md:p-6">
                 <PageHeader
                     title="Produtos"
                     description="Preços de venda, custos-base e faixas de custo negociadas com o fornecedor."
@@ -53,23 +54,40 @@ export default function ProductsIndex({
                     }
                 />
 
-                <form
-                    onSubmit={submitSearch}
-                    className="flex max-w-md flex-col gap-2 sm:flex-row"
+                <FilterPanel
+                    summary={
+                        filters.search
+                            ? `Busca: “${filters.search}” · ${products.length} resultado${products.length === 1 ? '' : 's'}`
+                            : `${products.length} produto${products.length === 1 ? '' : 's'} no catálogo`
+                    }
+                    resetHref={
+                        filters.search ? '/produtos?reset_filters=1' : undefined
+                    }
                 >
-                    <div className="relative flex-1">
-                        <Search className="absolute top-2.5 left-3 size-4 text-muted-foreground" />
-                        <Input
-                            value={search}
-                            onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Buscar por nome ou SKU"
-                            className="pl-9"
-                        />
-                    </div>
-                    <Button type="submit" variant="outline">
-                        Buscar
-                    </Button>
-                </form>
+                    <form
+                        onSubmit={submitSearch}
+                        className="flex flex-col gap-2 p-4 sm:max-w-xl sm:flex-row"
+                    >
+                        <div className="relative flex-1">
+                            <label htmlFor="product_search" className="sr-only">
+                                Buscar por nome ou SKU
+                            </label>
+                            <Search className="absolute top-3 left-3 size-4 text-muted-foreground sm:top-2.5" />
+                            <Input
+                                id="product_search"
+                                value={search}
+                                onChange={(event) =>
+                                    setSearch(event.target.value)
+                                }
+                                placeholder="Buscar por nome ou SKU"
+                                className="pl-9"
+                            />
+                        </div>
+                        <Button type="submit" variant="outline">
+                            Buscar
+                        </Button>
+                    </form>
+                </FilterPanel>
 
                 <Card className="gap-0 overflow-hidden py-0 shadow-xs">
                     {products.length === 0 ? (
@@ -158,7 +176,10 @@ export default function ProductsIndex({
                                             >
                                                 {formatCurrency(margin)}
                                             </TableCell>
-                                            <TableCell data-label="Faixas de custo">
+                                            <TableCell
+                                                data-label="Faixas de custo"
+                                                data-mobile-hidden
+                                            >
                                                 {product.cost_tiers.length === 0
                                                     ? '—'
                                                     : `${product.cost_tiers.length} faixa${product.cost_tiers.length > 1 ? 's' : ''}`}

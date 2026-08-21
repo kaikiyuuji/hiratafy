@@ -14,6 +14,7 @@ import {
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { EmptyState } from '@/components/empty-state';
+import { FilterPanel } from '@/components/filter-panel';
 import InputError from '@/components/input-error';
 import { PageHeader } from '@/components/page-header';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -140,7 +141,7 @@ export default function CampaignSpendsIndex({
     return (
         <>
             <Head title="Investimentos" />
-            <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+            <div className="flex flex-1 flex-col gap-4 p-3 sm:gap-6 sm:p-4 md:p-6">
                 <PageHeader
                     title="Investimentos do dia"
                     description="Defina o orçamento antes das vendas e complete o gasto real quando o Facebook fechar o dia."
@@ -153,29 +154,30 @@ export default function CampaignSpendsIndex({
                     }
                 />
 
-                <Card className="gap-4 py-4 shadow-xs">
-                    <CardContent className="px-4">
-                        <form
-                            onSubmit={loadDate}
-                            className="flex flex-col gap-3 sm:flex-row sm:items-end"
-                        >
-                            <div className="grid max-w-xs flex-1 gap-1.5">
-                                <Label htmlFor="date">Dia de operação</Label>
-                                <Input
-                                    id="date"
-                                    type="date"
-                                    value={selectedDate}
-                                    onChange={(event) =>
-                                        setSelectedDate(event.target.value)
-                                    }
-                                />
-                            </div>
-                            <Button type="submit" variant="outline">
-                                <CalendarDays /> Carregar dia
-                            </Button>
-                        </form>
-                    </CardContent>
-                </Card>
+                <FilterPanel
+                    summary={`Dia selecionado: ${formatDate(date)}`}
+                    resetHref="/investimentos?reset_filters=1"
+                >
+                    <form
+                        onSubmit={loadDate}
+                        className="flex flex-col gap-3 p-4 sm:max-w-lg sm:flex-row sm:items-end"
+                    >
+                        <div className="grid max-w-xs flex-1 gap-1.5">
+                            <Label htmlFor="date">Dia de operação</Label>
+                            <Input
+                                id="date"
+                                type="date"
+                                value={selectedDate}
+                                onChange={(event) =>
+                                    setSelectedDate(event.target.value)
+                                }
+                            />
+                        </div>
+                        <Button type="submit" variant="outline">
+                            <CalendarDays /> Carregar dia
+                        </Button>
+                    </form>
+                </FilterPanel>
 
                 <InvestmentCalendar calendar={calendar} selectedDate={date} />
 

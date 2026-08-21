@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\RemembersFilters;
 use App\Http\Requests\CampaignSpendRequest;
 use App\Models\Campaign;
 use App\Models\CampaignDailySpend;
@@ -16,14 +17,19 @@ use Inertia\Response;
 
 class CampaignSpendController extends Controller
 {
+    use RemembersFilters;
+
     public function index(Request $request): Response
     {
-        $request->validate(['date' => ['nullable', 'date']]);
-        $date = $request->filled('date')
-            ? $request->string('date')->toString()
-            : now()->toDateString();
         $user = $request->user();
         abort_unless($user instanceof User, 401);
+        $filters = $this->rememberedFilters(
+            $request,
+            'campaign-spends',
+            ['date' => now()->toDateString()],
+            ['date' => ['required', 'date']],
+        );
+        $date = (string) $filters['date'];
 
         $campaigns = Campaign::query()
             ->where('user_id', $user->id)

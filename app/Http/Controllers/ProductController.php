@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\AuthorizesOwnership;
+use App\Http\Controllers\Concerns\RemembersFilters;
 use App\Http\Requests\ProductRequest;
 use App\Models\Category;
 use App\Models\Product;
@@ -15,13 +16,19 @@ use Inertia\Response;
 
 class ProductController extends Controller
 {
-    use AuthorizesOwnership;
+    use AuthorizesOwnership, RemembersFilters;
 
     public function index(Request $request): Response
     {
         $user = $request->user();
         abort_unless($user instanceof User, 401);
-        $search = $request->string('search')->trim()->toString();
+        $filters = $this->rememberedFilters(
+            $request,
+            'products',
+            ['search' => ''],
+            ['search' => ['nullable', 'string', 'max:100']],
+        );
+        $search = trim((string) ($filters['search'] ?? ''));
 
         $products = Product::query()
             ->where('user_id', $user->id)

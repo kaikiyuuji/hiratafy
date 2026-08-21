@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\AuthorizesOwnership;
+use App\Http\Controllers\Concerns\RemembersFilters;
 use App\Http\Requests\SaleRequest;
 use App\Models\Campaign;
 use App\Models\Discount;
@@ -13,35 +14,57 @@ use App\Models\User;
 use App\Services\SaleRecorder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SaleController extends Controller
 {
-    use AuthorizesOwnership;
+    use AuthorizesOwnership, RemembersFilters;
 
     public function index(Request $request): Response
     {
-        $request->validate([
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
-            'campaign_id' => ['nullable', 'integer'],
-            'items_count' => ['nullable', 'integer', 'min:1', 'max:5000000'],
-            'search' => ['nullable', 'string', 'max:100'],
-        ]);
         $user = $request->user();
         abort_unless($user instanceof User, 401);
-        $startDate = $request->filled('start_date')
-            ? $request->string('start_date')->toString()
-            : now()->startOfMonth()->toDateString();
-        $endDate = $request->filled('end_date')
-            ? $request->string('end_date')->toString()
-            : now()->toDateString();
-        $campaignId = $request->filled('campaign_id') ? $request->integer('campaign_id') : null;
-        $itemsCount = $request->filled('items_count') ? $request->integer('items_count') : null;
-        $search = $request->string('search')->trim()->toString();
+        $filters = $this->rememberedFilters(
+            $request,
+            'sales',
+            [
+                'start_date' => now()->startOfMonth()->toDateString(),
+                'end_date' => now()->toDateString(),
+                'campaign_id' => null,
+                'items_count' => null,
+                'search' => '',
+                'sort' => 'latest',
+            ],
+            [
+                'start_date' => ['required', 'date'],
+                'end_date' => ['required', 'date', 'after_or_equal:start_date'],
+                'campaign_id' => ['nullable', 'integer'],
+                'items_count' => ['nullable', 'integer', 'min:1', 'max:5000000'],
+                'search' => ['nullable', 'string', 'max:100'],
+                'sort' => [
+                    'required',
+                    Rule::in([
+                        'latest',
+                        'oldest',
+                        'customer_asc',
+                        'customer_desc',
+                        'revenue_desc',
+                        'profit_desc',
+                        'items_desc',
+                    ]),
+                ],
+            ],
+        );
+        $startDate = (string) $filters['start_date'];
+        $endDate = (string) $filters['end_date'];
+        $campaignId = is_numeric($filters['campaign_id']) ? (int) $filters['campaign_id'] : null;
+        $itemsCount = is_numeric($filters['items_count']) ? (int) $filters['items_count'] : null;
+        $search = trim((string) ($filters['search'] ?? ''));
+        $sort = (string) $filters['sort'];
 
-        $sales = Sale::query()
+        $salesQuery = Sale::query()
             ->where('user_id', $user->id)
             ->whereBetween('sold_at', ["{$startDate} 00:00:00", "{$endDate} 23:59:59"])
             ->when($campaignId !== null, fn ($query) => $query->where('campaign_id', $campaignId))
@@ -58,8 +81,26 @@ class SaleController extends Controller
                     ->where('order_number', 'like', "%{$search}%")
                     ->orWhere('customer_name', 'like', "%{$search}%"),
             ))
-            ->with(['campaign:id,name', 'items:id,sale_id,quantity'])
-            ->orderByDesc('sold_at')
+            ->with('campaign:id,name')
+            ->withSum('items as items_count', 'quantity');
+
+        match ($sort) {
+            'oldest' => $salesQuery->orderBy('sold_at')->orderBy('id'),
+            'customer_asc' => $salesQuery
+                ->orderByRaw("CASE WHEN customer_name IS NULL OR customer_name = '' THEN 1 ELSE 0 END")
+                ->orderBy('customer_name')
+                ->orderByDesc('sold_at'),
+            'customer_desc' => $salesQuery
+                ->orderByRaw("CASE WHEN customer_name IS NULL OR customer_name = '' THEN 1 ELSE 0 END")
+                ->orderByDesc('customer_name')
+                ->orderByDesc('sold_at'),
+            'revenue_desc' => $salesQuery->orderByDesc('revenue_cents')->orderByDesc('sold_at'),
+            'profit_desc' => $salesQuery->orderByDesc('gross_profit_cents')->orderByDesc('sold_at'),
+            'items_desc' => $salesQuery->orderByDesc('items_count')->orderByDesc('sold_at'),
+            default => $salesQuery->orderByDesc('sold_at')->orderByDesc('id'),
+        };
+
+        $sales = $salesQuery
             ->paginate(20)
             ->withQueryString();
         $saleRows = [];
@@ -71,7 +112,7 @@ class SaleController extends Controller
                 'customer_name' => $sale->customer_name,
                 'sold_at' => $sale->sold_at->toIso8601String(),
                 'campaign_name' => $sale->campaign?->name,
-                'items_count' => $sale->items->sum('quantity'),
+                'items_count' => (int) $sale->getAttribute('items_count'),
                 'products_subtotal_cents' => $sale->products_subtotal_cents,
                 'discount_cents' => $sale->discount_cents,
                 'shipping_cents' => $sale->shipping_cents,
@@ -99,6 +140,7 @@ class SaleController extends Controller
                 'campaign_id' => $campaignId,
                 'items_count' => $itemsCount,
                 'search' => $search,
+                'sort' => $sort,
             ],
         ]);
     }

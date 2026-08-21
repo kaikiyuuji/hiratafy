@@ -59,7 +59,7 @@ export default function CampaignForm({
             />
             <form
                 onSubmit={submit}
-                className="flex flex-1 flex-col gap-6 p-4 md:p-6"
+                className="flex flex-1 flex-col gap-4 p-3 sm:gap-6 sm:p-4 md:p-6"
             >
                 <PageHeader
                     title={campaign ? 'Editar campanha' : 'Nova campanha'}

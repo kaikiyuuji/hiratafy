@@ -149,11 +149,18 @@
         }
 
         .responsive-table,
-        .responsive-table tbody,
         .responsive-table tr,
         .responsive-table td {
             display: block;
             width: 100%;
+        }
+
+        .responsive-table tbody {
+            display: grid;
+            width: 100%;
+            gap: 0.625rem;
+            padding: 0.625rem;
+            background: color-mix(in oklab, var(--muted) 28%, transparent);
         }
 
         .responsive-table thead {
@@ -161,11 +168,12 @@
         }
 
         .responsive-table tbody tr {
-            padding: 1rem;
-        }
-
-        .responsive-table tbody tr + tr {
-            border-top-width: 1px;
+            overflow: hidden;
+            border-width: 1px;
+            border-radius: 0.75rem;
+            background: var(--card);
+            padding: 0.875rem;
+            box-shadow: 0 1px 2px rgb(0 0 0 / 0.035);
         }
 
         .responsive-table tbody td {
@@ -198,6 +206,10 @@
         .responsive-table tbody td[data-actions] {
             justify-content: flex-end;
             padding-top: 0.75rem;
+        }
+
+        .responsive-table tbody td[data-mobile-hidden] {
+            display: none;
         }
     }
 }

@@ -96,7 +96,7 @@ export default function DiscountForm({
             />
             <form
                 onSubmit={submit}
-                className="flex flex-1 flex-col gap-6 p-4 md:p-6"
+                className="flex flex-1 flex-col gap-4 p-3 sm:gap-6 sm:p-4 md:p-6"
             >
                 <PageHeader
                     title={discount ? 'Editar desconto' : 'Novo desconto'}
@@ -308,7 +308,7 @@ export default function DiscountForm({
                                             type="button"
                                             variant="ghost"
                                             size="icon"
-                                            className="mt-6 text-muted-foreground hover:text-destructive"
+                                            className="justify-self-end text-muted-foreground hover:text-destructive sm:mt-6"
                                             onClick={() => removeTier(index)}
                                             disabled={
                                                 form.data.tiers.length === 1

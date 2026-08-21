@@ -30,7 +30,7 @@ export default function CampaignsIndex({
     return (
         <>
             <Head title="Campanhas" />
-            <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+            <div className="flex flex-1 flex-col gap-4 p-3 sm:gap-6 sm:p-4 md:p-6">
                 <PageHeader
                     title="Campanhas"
                     description="Organize as campanhas usadas para atribuir investimento e faturamento."

@@ -3,6 +3,7 @@ import { Pencil, Plus, Search, ShoppingBag, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { EmptyState } from '@/components/empty-state';
+import { FilterPanel } from '@/components/filter-panel';
 import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,7 +32,12 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { formatCurrency, formatDateTime, formatNumber } from '@/lib/formatters';
+import {
+    formatCurrency,
+    formatDate,
+    formatDateTime,
+    formatNumber,
+} from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import type { CampaignOption, SaleRow, SimplePagination } from '@/types';
 
@@ -44,6 +50,7 @@ type Props = {
         campaign_id: number | null;
         items_count: number | null;
         search: string;
+        sort: string;
     };
 };
 
@@ -57,6 +64,7 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
         filters.items_count === null ? '' : String(filters.items_count),
     );
     const [search, setSearch] = useState(filters.search);
+    const [sort, setSort] = useState(filters.sort);
     const [deleting, setDeleting] = useState<SaleRow | null>(null);
 
     function filter(event: FormEvent<HTMLFormElement>) {
@@ -69,6 +77,7 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                 campaign_id: campaignId === 'all' ? '' : campaignId,
                 items_count: itemsCount,
                 search,
+                sort,
             },
             { preserveState: true, replace: true },
         );
@@ -88,7 +97,7 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
     return (
         <>
             <Head title="Vendas" />
-            <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+            <div className="flex flex-1 flex-col gap-4 p-3 sm:gap-6 sm:p-4 md:p-6">
                 <PageHeader
                     title="Vendas"
                     description="Histórico manual de pedidos com receita, descontos e custo de produto já calculados."
@@ -101,10 +110,13 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                     }
                 />
 
-                <Card className="py-4 shadow-xs">
+                <FilterPanel
+                    summary={`${formatDate(filters.start_date)} – ${formatDate(filters.end_date)} · ${formatNumber(sales.total)} resultado${sales.total === 1 ? '' : 's'}`}
+                    resetHref="/vendas?reset_filters=1"
+                >
                     <form
                         onSubmit={filter}
-                        className="grid gap-3 px-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-[150px_150px_200px_140px_minmax(180px,1fr)_auto] 2xl:items-end"
+                        className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-[140px_140px_190px_130px_minmax(180px,1fr)_190px_auto] 2xl:items-end"
                     >
                         <div className="grid gap-1.5">
                             <label
@@ -205,6 +217,42 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                                 />
                             </div>
                         </div>
+                        <div className="grid gap-1.5">
+                            <label
+                                htmlFor="sort"
+                                className="text-xs font-medium text-muted-foreground"
+                            >
+                                Ordenar por
+                            </label>
+                            <Select value={sort} onValueChange={setSort}>
+                                <SelectTrigger id="sort" className="w-full">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="latest">
+                                        Mais recentes
+                                    </SelectItem>
+                                    <SelectItem value="oldest">
+                                        Mais antigas
+                                    </SelectItem>
+                                    <SelectItem value="customer_asc">
+                                        Cliente (A–Z)
+                                    </SelectItem>
+                                    <SelectItem value="customer_desc">
+                                        Cliente (Z–A)
+                                    </SelectItem>
+                                    <SelectItem value="items_desc">
+                                        Maior quantidade
+                                    </SelectItem>
+                                    <SelectItem value="revenue_desc">
+                                        Maior faturamento
+                                    </SelectItem>
+                                    <SelectItem value="profit_desc">
+                                        Maior lucro
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                         <Button
                             type="submit"
                             variant="outline"
@@ -213,7 +261,7 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                             Filtrar
                         </Button>
                     </form>
-                </Card>
+                </FilterPanel>
 
                 <Card className="gap-0 overflow-hidden py-0 shadow-xs">
                     {sales.data.length === 0 ? (
@@ -291,6 +339,7 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                                             </TableCell>
                                             <TableCell
                                                 data-label="Desconto"
+                                                data-mobile-hidden
                                                 className="text-right"
                                             >
                                                 {sale.discount_cents > 0
@@ -307,6 +356,7 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                                             </TableCell>
                                             <TableCell
                                                 data-label="Custo"
+                                                data-mobile-hidden
                                                 className="text-right"
                                             >
                                                 {formatCurrency(

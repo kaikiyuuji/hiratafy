@@ -18,6 +18,7 @@ import {
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { EmptyState } from '@/components/empty-state';
+import { FilterPanel } from '@/components/filter-panel';
 import { MetricCard } from '@/components/metric-card';
 import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
@@ -138,7 +139,7 @@ export default function Dashboard({
         <>
             <Head title="Dashboard" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+            <div className="flex flex-1 flex-col gap-4 p-3 sm:gap-6 sm:p-4 md:p-6">
                 <PageHeader
                     title="Visão financeira"
                     description="Receita, produto e mídia reunidos para mostrar o lucro real da operação."
@@ -151,50 +152,51 @@ export default function Dashboard({
                     }
                 />
 
-                <Card className="gap-4 py-4 shadow-xs">
-                    <CardContent className="px-4">
-                        <form
-                            onSubmit={filter}
-                            className="flex flex-col gap-3 sm:flex-row sm:items-end"
-                        >
-                            <div className="grid flex-1 gap-1.5">
-                                <label
-                                    htmlFor="start_date"
-                                    className="text-xs font-medium text-muted-foreground"
-                                >
-                                    Data inicial
-                                </label>
-                                <Input
-                                    id="start_date"
-                                    type="date"
-                                    value={startDate}
-                                    onChange={(event) =>
-                                        setStartDate(event.target.value)
-                                    }
-                                />
-                            </div>
-                            <div className="grid flex-1 gap-1.5">
-                                <label
-                                    htmlFor="end_date"
-                                    className="text-xs font-medium text-muted-foreground"
-                                >
-                                    Data final
-                                </label>
-                                <Input
-                                    id="end_date"
-                                    type="date"
-                                    value={endDate}
-                                    onChange={(event) =>
-                                        setEndDate(event.target.value)
-                                    }
-                                />
-                            </div>
-                            <Button type="submit" variant="outline">
-                                <CalendarDays /> Aplicar período
-                            </Button>
-                        </form>
-                    </CardContent>
-                </Card>
+                <FilterPanel
+                    summary={`${formatDate(filters.start_date)} – ${formatDate(filters.end_date)}`}
+                    resetHref="/dashboard?reset_filters=1"
+                >
+                    <form
+                        onSubmit={filter}
+                        className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end"
+                    >
+                        <div className="grid flex-1 gap-1.5">
+                            <label
+                                htmlFor="start_date"
+                                className="text-xs font-medium text-muted-foreground"
+                            >
+                                Data inicial
+                            </label>
+                            <Input
+                                id="start_date"
+                                type="date"
+                                value={startDate}
+                                onChange={(event) =>
+                                    setStartDate(event.target.value)
+                                }
+                            />
+                        </div>
+                        <div className="grid flex-1 gap-1.5">
+                            <label
+                                htmlFor="end_date"
+                                className="text-xs font-medium text-muted-foreground"
+                            >
+                                Data final
+                            </label>
+                            <Input
+                                id="end_date"
+                                type="date"
+                                value={endDate}
+                                onChange={(event) =>
+                                    setEndDate(event.target.value)
+                                }
+                            />
+                        </div>
+                        <Button type="submit" variant="outline">
+                            <CalendarDays /> Aplicar período
+                        </Button>
+                    </form>
+                </FilterPanel>
 
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <MetricCard

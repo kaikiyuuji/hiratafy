@@ -206,7 +206,7 @@ export default function SaleForm({
             <Head title={sale ? 'Editar venda' : 'Nova venda'} />
             <form
                 onSubmit={submit}
-                className="flex flex-1 flex-col gap-6 p-4 md:p-6"
+                className="flex flex-1 flex-col gap-4 p-3 sm:gap-6 sm:p-4 md:p-6"
             >
                 <PageHeader
                     title={sale ? 'Editar venda' : 'Registrar venda'}
@@ -557,44 +557,46 @@ export default function SaleForm({
                                             >
                                                 <Trash2 />
                                             </Button>
-                                            <LineMetric
-                                                label="Preço unit."
-                                                value={
-                                                    line
-                                                        ? formatCurrency(
-                                                              line.product
-                                                                  .sale_price_cents,
-                                                          )
-                                                        : '—'
-                                                }
-                                            />
-                                            <LineMetric
-                                                label="Desconto da categoria"
-                                                value={
-                                                    line &&
-                                                    line.discount_basis_points >
-                                                        0
-                                                        ? formatBasisPoints(
-                                                              line.discount_basis_points,
-                                                          )
-                                                        : '—'
-                                                }
-                                                accent={
-                                                    line !== null &&
-                                                    line.discount_basis_points >
-                                                        0
-                                                }
-                                            />
-                                            <LineMetric
-                                                label="Custo do fornecedor"
-                                                value={
-                                                    line
-                                                        ? formatCurrency(
-                                                              line.unit_cost_cents,
-                                                          )
-                                                        : '—'
-                                                }
-                                            />
+                                            <div className="col-span-3 grid grid-cols-2 gap-3 rounded-lg bg-muted/45 p-3 sm:grid-cols-3">
+                                                <LineMetric
+                                                    label="Preço unit."
+                                                    value={
+                                                        line
+                                                            ? formatCurrency(
+                                                                  line.product
+                                                                      .sale_price_cents,
+                                                              )
+                                                            : '—'
+                                                    }
+                                                />
+                                                <LineMetric
+                                                    label="Desconto da categoria"
+                                                    value={
+                                                        line &&
+                                                        line.discount_basis_points >
+                                                            0
+                                                            ? formatBasisPoints(
+                                                                  line.discount_basis_points,
+                                                              )
+                                                            : '—'
+                                                    }
+                                                    accent={
+                                                        line !== null &&
+                                                        line.discount_basis_points >
+                                                            0
+                                                    }
+                                                />
+                                                <LineMetric
+                                                    label="Custo do fornecedor"
+                                                    value={
+                                                        line
+                                                            ? formatCurrency(
+                                                                  line.unit_cost_cents,
+                                                              )
+                                                            : '—'
+                                                    }
+                                                />
+                                            </div>
                                             {line && (
                                                 <div className="col-span-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground">
                                                     <span>
@@ -611,19 +613,19 @@ export default function SaleForm({
                                                             ? 'custo-base'
                                                             : `${line.cost_tier_min_quantity}+ unidades deste produto`}
                                                     </span>
-                                                    <span>
+                                                    <span className="hidden sm:inline">
                                                         Bruto:{' '}
                                                         {formatCurrency(
                                                             line.gross_cents,
                                                         )}
                                                     </span>
-                                                    <span>
+                                                    <span className="hidden sm:inline">
                                                         Desconto: −{' '}
                                                         {formatCurrency(
                                                             line.discount_cents,
                                                         )}
                                                     </span>
-                                                    <span>
+                                                    <span className="hidden sm:inline">
                                                         Custo:{' '}
                                                         {formatCurrency(
                                                             line.cost_cents,
@@ -911,13 +913,13 @@ function LineMetric({
     accent?: boolean;
 }) {
     return (
-        <div className="grid gap-2 pt-0.5">
+        <div className="grid gap-1 pt-0.5">
             <span className="text-xs font-medium text-muted-foreground">
                 {label}
             </span>
             <span
                 className={cn(
-                    'pt-2 text-sm font-medium',
+                    'text-sm font-medium',
                     accent && 'text-emerald-600 dark:text-emerald-400',
                 )}
             >

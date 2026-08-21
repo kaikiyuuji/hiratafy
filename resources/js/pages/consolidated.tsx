@@ -13,7 +13,6 @@ import {
     Truck,
     WalletCards,
 } from 'lucide-react';
-import { useState } from 'react';
 import { MetricCard } from '@/components/metric-card';
 import { PageHeader } from '@/components/page-header';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -27,6 +26,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { usePersistentState } from '@/hooks/use-persistent-state';
 import {
     formatCurrency,
     formatDate,
@@ -50,7 +50,10 @@ type Summary = {
 };
 
 export default function Consolidated({ summary }: { summary: Summary }) {
-    const [campaignSpend, setCampaignSpend] = useState('');
+    const [campaignSpend, setCampaignSpend] = usePersistentState(
+        'hiratafy.consolidated.campaign-spend',
+        '',
+    );
     const campaignSpendCents = Math.max(0, moneyInputToCents(campaignSpend));
     const finalProfitCents = summary.product_profit_cents - campaignSpendCents;
     const finalMargin =
@@ -66,7 +69,7 @@ export default function Consolidated({ summary }: { summary: Summary }) {
         <>
             <Head title="Consolidado" />
 
-            <div className="flex flex-1 flex-col gap-5 p-4 sm:gap-6 md:p-6">
+            <div className="flex flex-1 flex-col gap-4 p-3 sm:gap-6 sm:p-4 md:p-6">
                 <PageHeader
                     title="Consolidado de vendas"
                     description="Veja o resultado de toda a operação com um único valor total de mídia, sem considerar as campanhas cadastradas."
@@ -135,9 +138,22 @@ export default function Consolidated({ summary }: { summary: Summary }) {
                         </CardHeader>
                         <CardContent className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.8fr)] lg:items-end">
                             <div className="grid gap-2">
-                                <Label htmlFor="campaign_spend">
-                                    Investimento total em campanhas (USD)
-                                </Label>
+                                <div className="flex items-center justify-between gap-3">
+                                    <Label htmlFor="campaign_spend">
+                                        Investimento total em campanhas (USD)
+                                    </Label>
+                                    {campaignSpend !== '' && (
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-auto px-2 py-1 text-xs text-muted-foreground"
+                                            onClick={() => setCampaignSpend('')}
+                                        >
+                                            Limpar
+                                        </Button>
+                                    )}
+                                </div>
                                 <div className="relative">
                                     <WalletCards className="absolute top-3 left-3 size-4 text-muted-foreground" />
                                     <Input
@@ -155,8 +171,8 @@ export default function Consolidated({ summary }: { summary: Summary }) {
                                     />
                                 </div>
                                 <p className="text-xs text-muted-foreground">
-                                    O campo volta a ficar vazio ao recarregar a
-                                    página.
+                                    Este valor fica salvo apenas neste navegador
+                                    e continua sem alterar seus dados.
                                 </p>
                             </div>
 

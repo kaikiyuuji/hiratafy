@@ -75,7 +75,7 @@ export default function CategoriesIndex({
     return (
         <>
             <Head title="Categorias" />
-            <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+            <div className="flex flex-1 flex-col gap-4 p-3 sm:gap-6 sm:p-4 md:p-6">
                 <PageHeader
                     title="Categorias"
                     description="Agrupe produtos para aplicar descontos por quantidade em todo o carrinho."
