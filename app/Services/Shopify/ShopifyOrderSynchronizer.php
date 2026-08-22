@@ -15,7 +15,7 @@ class ShopifyOrderSynchronizer
 
     public function sync(ShopifyIntegration $integration): int
     {
-        $initialDays = max(1, (int) config('services.shopify.initial_sync_days', 7));
+        $initialDays = max(1, (int) config('services.shopify.initial_sync_days', 30));
         $since = $integration->last_sync_at?->copy()->subMinutes(10)
             ?? now()->subDays($initialDays);
         $orders = $this->api->paidOrdersSince($integration, $since);
