@@ -306,6 +306,26 @@ test('shopify api creates the paid orders webhook at the current tunnel url', fu
     Http::assertSent(fn ($request): bool => str_contains($request->body(), 'ORDERS_PAID'));
 });
 
+test('shopify api explains when the app is not installed in the store', function () {
+    config()->set('services.shopify.client_id', 'client-id');
+    config()->set('services.shopify.client_secret', 'client-secret');
+    $user = User::factory()->create();
+    $integration = ShopifyIntegration::create([
+        'user_id' => $user->id,
+        'shop_domain' => 'loja-mrgk.myshopify.com',
+        'is_active' => true,
+    ]);
+    Http::fake([
+        '*/admin/oauth/access_token' => Http::response([
+            'error' => 'app_not_installed',
+            'error_description' => 'The application is not installed on this shop.',
+        ], 400),
+    ]);
+
+    expect(fn () => app(ShopifyApi::class)->shopInfo($integration))
+        ->toThrow(RuntimeException::class, 'ainda não foi instalado');
+});
+
 /** @return array<string, mixed> */
 function shopifyPaidOrderPayload(): array
 {

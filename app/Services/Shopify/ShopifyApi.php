@@ -268,6 +268,21 @@ class ShopifyApi
                 'client_id' => config('services.shopify.client_id'),
                 'client_secret' => config('services.shopify.client_secret'),
             ]);
+        $errorCode = $response->json('error');
+
+        if ($response->failed() && is_string($errorCode)) {
+            $message = match ($errorCode) {
+                'app_not_installed' => "O app ainda não foi instalado em {$shopDomain}. No Shopify Dev Dashboard, abra o app, acesse Home e clique em Install app.",
+                'shop_not_permitted' => 'O app e a loja precisam pertencer à mesma organização da Shopify para usar estas credenciais.',
+                'invalid_client' => 'O Client ID ou o Client secret da Shopify está incorreto.',
+                default => null,
+            };
+
+            if ($message !== null) {
+                throw new RuntimeException($message);
+            }
+        }
+
         $response->throw();
         $token = $response->json('access_token');
 
