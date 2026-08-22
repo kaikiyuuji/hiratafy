@@ -19,8 +19,13 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { DailyPerformanceChart } from '@/components/daily-performance-chart';
 import type { DailyMetric } from '@/components/daily-performance-chart';
-import { DateRangeShortcuts } from '@/components/date-range-shortcuts';
+import {
+    currentMonthDateRange,
+    DateRangeShortcuts,
+} from '@/components/date-range-shortcuts';
 import { EmptyState } from '@/components/empty-state';
+import { FilterChips } from '@/components/filter-chips';
+import type { FilterChip } from '@/components/filter-chips';
 import { FilterPanel } from '@/components/filter-panel';
 import { MetricCard } from '@/components/metric-card';
 import { PageHeader } from '@/components/page-header';
@@ -34,6 +39,8 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
 import {
     Table,
     TableBody,
@@ -93,6 +100,11 @@ type RecentSale = {
 type Props = {
     filters: { start_date: string; end_date: string };
     summary: Summary;
+    comparison: {
+        start_date: string;
+        end_date: string;
+        summary: Summary;
+    };
     campaigns: CampaignMetric[];
     daily: DailyMetric[];
     recent_sales: RecentSale[];
@@ -101,16 +113,35 @@ type Props = {
 export default function Dashboard({
     filters,
     summary,
+    comparison,
     campaigns,
     daily,
     recent_sales,
 }: Props) {
     const [startDate, setStartDate] = useState(filters.start_date);
     const [endDate, setEndDate] = useState(filters.end_date);
+    const [isFiltering, setIsFiltering] = useState(false);
     const dailyRows = [...daily].reverse();
     const activeDays = daily.filter(
         (day) => day.orders > 0 || day.ad_spend_cents > 0,
     ).length;
+    const comparisonLabel = 'vs. período anterior';
+    const defaultPeriod = currentMonthDateRange();
+    const activeFilterChips: FilterChip[] =
+        filters.start_date !== defaultPeriod.startDate ||
+        filters.end_date !== defaultPeriod.endDate
+            ? [
+                  {
+                      id: 'period',
+                      label: `${formatDate(filters.start_date)} – ${formatDate(filters.end_date)}`,
+                      onRemove: () =>
+                          applyPeriod(
+                              defaultPeriod.startDate,
+                              defaultPeriod.endDate,
+                          ),
+                  },
+              ]
+            : [];
 
     function applyPeriod(nextStartDate: string, nextEndDate: string) {
         setStartDate(nextStartDate);
@@ -118,7 +149,13 @@ export default function Dashboard({
         router.get(
             '/dashboard',
             { start_date: nextStartDate, end_date: nextEndDate },
-            { preserveScroll: true, preserveState: true, replace: true },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                replace: true,
+                onStart: () => setIsFiltering(true),
+                onFinish: () => setIsFiltering(false),
+            },
         );
     }
 
@@ -151,6 +188,7 @@ export default function Dashboard({
                         <DateRangeShortcuts
                             startDate={startDate}
                             endDate={endDate}
+                            disabled={isFiltering}
                             onSelect={(range) =>
                                 applyPeriod(range.startDate, range.endDate)
                             }
@@ -193,45 +231,90 @@ export default function Dashboard({
                                 }
                             />
                         </div>
-                        <Button type="submit" variant="outline">
-                            <CalendarDays /> Aplicar período
+                        <Button
+                            type="submit"
+                            variant="outline"
+                            disabled={isFiltering}
+                        >
+                            {isFiltering ? <Spinner /> : <CalendarDays />}
+                            Aplicar período
                         </Button>
                     </form>
                 </FilterPanel>
 
+                <FilterChips chips={activeFilterChips} />
+
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <MetricCard
-                        label="Faturamento"
-                        value={formatCurrency(summary.revenue_cents)}
-                        hint={`${formatNumber(summary.orders)} vendas · ticket ${formatCurrency(summary.average_order_cents)}`}
-                        icon={BadgeDollarSign}
-                    />
-                    <MetricCard
-                        label="Investimento em campanhas"
-                        value={formatCurrency(summary.ad_spend_cents)}
-                        hint={`ROAS ${summary.roas === null ? '—' : `${summary.roas.toFixed(2)}x`}`}
-                        icon={WalletCards}
-                    />
-                    <MetricCard
-                        label="Custo de produtos"
-                        value={formatCurrency(summary.product_cost_cents)}
-                        hint={`${formatNumber(summary.units)} unidades vendidas`}
-                        icon={Boxes}
-                    />
-                    <MetricCard
-                        label="Lucro após mídia"
-                        value={formatCurrency(summary.profit_cents)}
-                        hint={`Margem ${formatPercentage(summary.margin_percentage)}`}
-                        icon={
-                            summary.profit_cents >= 0
-                                ? TrendingUp
-                                : TrendingDown
-                        }
-                        tone={
-                            summary.profit_cents >= 0 ? 'positive' : 'negative'
-                        }
-                    />
+                    {isFiltering ? (
+                        Array.from({ length: 4 }, (_, index) => (
+                            <Skeleton key={index} className="h-32" />
+                        ))
+                    ) : (
+                        <>
+                            <MetricCard
+                                label="Faturamento"
+                                value={formatCurrency(summary.revenue_cents)}
+                                hint={`${formatNumber(summary.orders)} vendas · ticket ${formatCurrency(summary.average_order_cents)}`}
+                                icon={BadgeDollarSign}
+                                comparison={metricComparison(
+                                    summary.revenue_cents,
+                                    comparison.summary.revenue_cents,
+                                    comparisonLabel,
+                                )}
+                            />
+                            <MetricCard
+                                label="Investimento em campanhas"
+                                value={formatCurrency(summary.ad_spend_cents)}
+                                hint={`ROAS ${summary.roas === null ? '—' : `${summary.roas.toFixed(2)}x`}`}
+                                icon={WalletCards}
+                                comparison={metricComparison(
+                                    summary.ad_spend_cents,
+                                    comparison.summary.ad_spend_cents,
+                                    comparisonLabel,
+                                    true,
+                                )}
+                            />
+                            <MetricCard
+                                label="Custo de produtos"
+                                value={formatCurrency(
+                                    summary.product_cost_cents,
+                                )}
+                                hint={`${formatNumber(summary.units)} unidades vendidas`}
+                                icon={Boxes}
+                                comparison={metricComparison(
+                                    summary.product_cost_cents,
+                                    comparison.summary.product_cost_cents,
+                                    comparisonLabel,
+                                    true,
+                                )}
+                            />
+                            <MetricCard
+                                label="Lucro após mídia"
+                                value={formatCurrency(summary.profit_cents)}
+                                hint={`Margem ${formatPercentage(summary.margin_percentage)}`}
+                                icon={
+                                    summary.profit_cents >= 0
+                                        ? TrendingUp
+                                        : TrendingDown
+                                }
+                                tone={
+                                    summary.profit_cents >= 0
+                                        ? 'positive'
+                                        : 'negative'
+                                }
+                                comparison={metricComparison(
+                                    summary.profit_cents,
+                                    comparison.summary.profit_cents,
+                                    comparisonLabel,
+                                )}
+                            />
+                        </>
+                    )}
                 </div>
+                <p className="-mt-2 text-right text-xs text-muted-foreground">
+                    Período anterior: {formatDate(comparison.start_date)} –{' '}
+                    {formatDate(comparison.end_date)}
+                </p>
 
                 {summary.orders === 0 && summary.ad_spend_cents === 0 ? (
                     <Card className="shadow-xs">
@@ -641,6 +724,44 @@ export default function Dashboard({
             </div>
         </>
     );
+}
+
+function metricComparison(
+    current: number,
+    previous: number,
+    label: string,
+    neutralTone = false,
+): {
+    value: string;
+    direction: 'up' | 'down' | 'neutral';
+    tone: 'positive' | 'negative' | 'neutral';
+    label: string;
+} {
+    const difference = current - previous;
+    const direction =
+        difference > 0 ? 'up' : difference < 0 ? 'down' : 'neutral';
+    const percentage =
+        previous === 0
+            ? current === 0
+                ? 0
+                : null
+            : (difference / Math.abs(previous)) * 100;
+
+    return {
+        value:
+            percentage === null
+                ? 'Novo'
+                : `${difference > 0 ? '+' : ''}${formatPercentage(percentage)}`,
+        direction,
+        tone: neutralTone
+            ? 'neutral'
+            : direction === 'up'
+              ? 'positive'
+              : direction === 'down'
+                ? 'negative'
+                : 'neutral',
+        label,
+    };
 }
 
 function BreakdownRow({

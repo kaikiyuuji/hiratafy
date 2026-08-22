@@ -8,6 +8,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\User;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 
 class DashboardMetrics
@@ -15,27 +16,8 @@ class DashboardMetrics
     /** @return array<string, mixed> */
     public function build(User $user, CarbonInterface $start, CarbonInterface $end): array
     {
-        $sales = Sale::query()
-            ->where('user_id', $user->id)
-            ->whereBetween('sold_at', [$start->copy()->startOfDay(), $end->copy()->endOfDay()])
-            ->with('campaign:id,name')
-            ->orderByDesc('sold_at')
-            ->get();
-
-        $spends = CampaignDailySpend::query()
-            ->whereHas('campaign', fn ($query) => $query->where('user_id', $user->id))
-            ->whereDate('spend_date', '>=', $start->toDateString())
-            ->whereDate('spend_date', '<=', $end->toDateString())
-            ->with('campaign:id,name')
-            ->get();
-
-        $adSpend = $spends->sum(fn (CampaignDailySpend $spend): int => $spend->effectiveSpendCents());
-        $revenue = (int) $sales->sum('revenue_cents');
-        $productCost = (int) $sales->sum('product_cost_cents');
-        $profit = $revenue - $productCost - $adSpend;
-        $units = $sales->isEmpty()
-            ? 0
-            : (int) SaleItem::query()->whereIn('sale_id', $sales->pluck('id'))->sum('quantity');
+        $sales = $this->salesForPeriod($user, $start, $end);
+        $spends = $this->spendsForPeriod($user, $start, $end);
         $recentSales = [];
 
         foreach ($sales->take(8) as $sale) {
@@ -52,23 +34,78 @@ class DashboardMetrics
         }
 
         return [
-            'summary' => [
-                'orders' => $sales->count(),
-                'units' => $units,
-                'revenue_cents' => $revenue,
-                'products_subtotal_cents' => (int) $sales->sum('products_subtotal_cents'),
-                'discount_cents' => (int) $sales->sum('discount_cents'),
-                'shipping_cents' => (int) $sales->sum('shipping_cents'),
-                'product_cost_cents' => $productCost,
-                'ad_spend_cents' => $adSpend,
-                'profit_cents' => $profit,
-                'roas' => $adSpend > 0 ? round($revenue / $adSpend, 2) : null,
-                'margin_percentage' => $revenue > 0 ? round(($profit / $revenue) * 100, 2) : null,
-                'average_order_cents' => $sales->isNotEmpty() ? (int) round($revenue / $sales->count()) : 0,
-            ],
+            'summary' => $this->summarize($sales, $spends),
             'campaigns' => $this->campaignMetrics($user, $sales, $spends),
             'daily' => $this->dailyMetrics($start, $end, $sales, $spends),
             'recent_sales' => $recentSales,
+        ];
+    }
+
+    /** @return array<string, int|float|null> */
+    public function summary(User $user, CarbonInterface $start, CarbonInterface $end): array
+    {
+        return $this->summarize(
+            $this->salesForPeriod($user, $start, $end),
+            $this->spendsForPeriod($user, $start, $end),
+        );
+    }
+
+    /** @return Collection<int, Sale> */
+    private function salesForPeriod(
+        User $user,
+        CarbonInterface $start,
+        CarbonInterface $end,
+    ): Collection {
+        return Sale::query()
+            ->where('user_id', $user->id)
+            ->whereBetween('sold_at', [$start->copy()->startOfDay(), $end->copy()->endOfDay()])
+            ->with('campaign:id,name')
+            ->orderByDesc('sold_at')
+            ->get();
+    }
+
+    /** @return Collection<int, CampaignDailySpend> */
+    private function spendsForPeriod(
+        User $user,
+        CarbonInterface $start,
+        CarbonInterface $end,
+    ): Collection {
+        return CampaignDailySpend::query()
+            ->whereHas('campaign', fn ($query) => $query->where('user_id', $user->id))
+            ->whereDate('spend_date', '>=', $start->toDateString())
+            ->whereDate('spend_date', '<=', $end->toDateString())
+            ->with('campaign:id,name')
+            ->get();
+    }
+
+    /**
+     * @param  Collection<int, Sale>  $sales
+     * @param  Collection<int, CampaignDailySpend>  $spends
+     * @return array<string, int|float|null>
+     */
+    private function summarize(Collection $sales, Collection $spends): array
+    {
+        $adSpend = $spends->sum(fn (CampaignDailySpend $spend): int => $spend->effectiveSpendCents());
+        $revenue = (int) $sales->sum('revenue_cents');
+        $productCost = (int) $sales->sum('product_cost_cents');
+        $profit = $revenue - $productCost - $adSpend;
+        $units = $sales->isEmpty()
+            ? 0
+            : (int) SaleItem::query()->whereIn('sale_id', $sales->pluck('id'))->sum('quantity');
+
+        return [
+            'orders' => $sales->count(),
+            'units' => $units,
+            'revenue_cents' => $revenue,
+            'products_subtotal_cents' => (int) $sales->sum('products_subtotal_cents'),
+            'discount_cents' => (int) $sales->sum('discount_cents'),
+            'shipping_cents' => (int) $sales->sum('shipping_cents'),
+            'product_cost_cents' => $productCost,
+            'ad_spend_cents' => $adSpend,
+            'profit_cents' => $profit,
+            'roas' => $adSpend > 0 ? round($revenue / $adSpend, 2) : null,
+            'margin_percentage' => $revenue > 0 ? round(($profit / $revenue) * 100, 2) : null,
+            'average_order_cents' => $sales->isNotEmpty() ? (int) round($revenue / $sales->count()) : 0,
         ];
     }
 

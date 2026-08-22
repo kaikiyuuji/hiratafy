@@ -32,11 +32,23 @@ class DashboardController extends Controller
         );
         $start = Carbon::parse((string) $filters['start_date']);
         $end = Carbon::parse((string) $filters['end_date']);
+        $periodDays = ((int) $start->diffInDays($end)) + 1;
+        $previousEnd = $start->copy()->subDay();
+        $previousStart = $previousEnd->copy()->subDays($periodDays - 1);
 
         return Inertia::render('dashboard', [
             'filters' => [
                 'start_date' => $start->toDateString(),
                 'end_date' => $end->toDateString(),
+            ],
+            'comparison' => [
+                'start_date' => $previousStart->toDateString(),
+                'end_date' => $previousEnd->toDateString(),
+                'summary' => $metrics->summary(
+                    $user,
+                    $previousStart,
+                    $previousEnd,
+                ),
             ],
             ...$metrics->build($user, $start, $end),
         ]);

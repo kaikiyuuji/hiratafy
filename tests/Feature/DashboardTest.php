@@ -55,3 +55,38 @@ test('dashboard includes every calendar day in the selected range', function () 
             ->where('daily.11.orders', 1)
             ->where('daily.11.profit_cents', 3000));
 });
+
+test('dashboard compares the selected range with the immediately previous period', function () {
+    $user = User::factory()->create();
+
+    foreach ([
+        ['order_number' => 'PREVIOUS', 'sold_at' => '2026-08-08 12:00:00', 'revenue' => 5000, 'cost' => 2000],
+        ['order_number' => 'CURRENT', 'sold_at' => '2026-08-10 12:00:00', 'revenue' => 10000, 'cost' => 4000],
+    ] as $sale) {
+        Sale::create([
+            'user_id' => $user->id,
+            'campaign_id' => null,
+            'order_number' => $sale['order_number'],
+            'sold_at' => $sale['sold_at'],
+            'products_subtotal_cents' => $sale['revenue'],
+            'discount_cents' => 0,
+            'shipping_cents' => 0,
+            'revenue_cents' => $sale['revenue'],
+            'product_cost_cents' => $sale['cost'],
+            'gross_profit_cents' => $sale['revenue'] - $sale['cost'],
+        ]);
+    }
+
+    $this->actingAs($user)
+        ->get(route('dashboard', [
+            'start_date' => '2026-08-10',
+            'end_date' => '2026-08-11',
+        ]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('summary.revenue_cents', 10000)
+            ->where('comparison.start_date', '2026-08-08')
+            ->where('comparison.end_date', '2026-08-09')
+            ->where('comparison.summary.revenue_cents', 5000)
+            ->where('comparison.summary.product_cost_cents', 2000)
+            ->where('comparison.summary.profit_cents', 3000));
+});
