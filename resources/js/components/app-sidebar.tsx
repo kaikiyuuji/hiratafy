@@ -12,8 +12,8 @@ import {
     WalletCards,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
+import type { NavSection } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
@@ -24,61 +24,76 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import type { NavItem } from '@/types';
-
-const mainNavItems: NavItem[] = [
+const navSections: NavSection[] = [
     {
-        title: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutDashboard,
+        label: 'Relatórios',
+        items: [
+            {
+                title: 'Dashboard',
+                href: '/dashboard',
+                icon: LayoutDashboard,
+            },
+            {
+                title: 'Consolidado',
+                href: '/consolidado',
+                icon: ChartPie,
+            },
+        ],
     },
     {
-        title: 'Consolidado',
-        href: '/consolidado',
-        icon: ChartPie,
+        label: 'Operação',
+        items: [
+            {
+                title: 'Vendas',
+                href: '/vendas',
+                icon: ShoppingBag,
+            },
+            {
+                title: 'Produtos',
+                href: '/produtos',
+                icon: Package,
+            },
+            {
+                title: 'Categorias',
+                href: '/categorias',
+                icon: Tags,
+            },
+            {
+                title: 'Descontos',
+                href: '/descontos',
+                icon: BadgePercent,
+            },
+        ],
     },
     {
-        title: 'Vendas',
-        href: '/vendas',
-        icon: ShoppingBag,
+        label: 'Marketing',
+        items: [
+            {
+                title: 'Investimentos',
+                href: '/investimentos',
+                icon: WalletCards,
+            },
+            {
+                title: 'Campanhas',
+                href: '/campanhas',
+                icon: Megaphone,
+            },
+        ],
     },
     {
-        title: 'Investimentos',
-        href: '/investimentos',
-        icon: WalletCards,
-    },
-    {
-        title: 'Campanhas',
-        href: '/campanhas',
-        icon: Megaphone,
-    },
-    {
-        title: 'Produtos',
-        href: '/produtos',
-        icon: Package,
-    },
-    {
-        title: 'Categorias',
-        href: '/categorias',
-        icon: Tags,
-    },
-    {
-        title: 'Descontos',
-        href: '/descontos',
-        icon: BadgePercent,
-    },
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Regras financeiras',
-        href: '/settings/financial',
-        icon: ChartNoAxesCombined,
-    },
-    {
-        title: 'Configurações',
-        href: '/settings/profile',
-        icon: Settings,
+        label: 'Sistema',
+        items: [
+            {
+                title: 'Regras financeiras',
+                href: '/settings/financial',
+                icon: ChartNoAxesCombined,
+            },
+            {
+                title: 'Configurações',
+                href: '/settings/profile',
+                icon: Settings,
+            },
+        ],
     },
 ];
 
@@ -98,11 +113,10 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain sections={navSections} />
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
