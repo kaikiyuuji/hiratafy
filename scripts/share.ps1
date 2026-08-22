@@ -18,7 +18,7 @@ $tunnelProcess = $null
 try {
     Set-Location $projectRoot
 
-    foreach ($command in @('php', 'npm', 'cloudflared')) {
+    foreach ($command in @('php', 'npm', 'npx', 'cloudflared')) {
         if (-not (Get-Command $command -ErrorAction SilentlyContinue)) {
             throw "O comando '$command' nao foi encontrado no PATH."
         }
@@ -55,6 +55,12 @@ try {
 
     if ($LASTEXITCODE -ne 0) {
         throw 'Nao foi possivel limpar os caches do Laravel.'
+    }
+
+    & php artisan migrate --force --no-interaction --no-ansi
+
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Nao foi possivel atualizar o banco de dados.'
     }
 
     $cloudflared = (Get-Command cloudflared).Source
@@ -100,18 +106,31 @@ try {
 
     $env:APP_URL = $publicUrl
 
+    $php = (Get-Command php).Source
+    & $php artisan shopify:setup $publicUrl --no-ansi --no-interaction
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning 'O app foi iniciado, mas a Shopify nao conseguiu atualizar o webhook.'
+    }
+
     Write-Host ''
     Write-Host 'Hiratafy esta disponivel em:' -ForegroundColor Green
     Write-Host $publicUrl -ForegroundColor Cyan
     Write-Host ''
     Write-Host 'Mantenha este terminal aberto. Pressione Ctrl+C para encerrar.'
 
-    Set-Location $publicPath
-    $php = (Get-Command php).Source
-    & $php -S "127.0.0.1:$Port" $routerPath *> $null
+    $serverCommand = "`"$php`" -S 127.0.0.1:$Port -t `"$publicPath`" `"$routerPath`""
+    $queueCommand = "`"$php`" artisan queue:work --sleep=1 --tries=3 --timeout=120 --no-interaction"
+    & npx concurrently `
+        --names 'server,queue' `
+        --hide 'server,queue' `
+        --kill-others `
+        --kill-timeout 3000 `
+        $serverCommand `
+        $queueCommand
 
     if ($LASTEXITCODE -ne 0) {
-        throw 'O servidor local do Hiratafy foi encerrado com erro.'
+        throw 'O servidor local ou a fila do Hiratafy foi encerrado com erro.'
     }
 } finally {
     if ($null -ne $tunnelProcess -and -not $tunnelProcess.HasExited) {

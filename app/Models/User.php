@@ -79,4 +79,10 @@ class User extends Authenticatable implements PasskeyUser
     {
         return $this->hasOne(StoreSetting::class);
     }
+
+    /** @return HasOne<ShopifyIntegration, $this> */
+    public function shopifyIntegration(): HasOne
+    {
+        return $this->hasOne(ShopifyIntegration::class);
+    }
 }

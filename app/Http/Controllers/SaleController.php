@@ -108,6 +108,7 @@ class SaleController extends Controller
         foreach ($sales->items() as $sale) {
             $saleRows[] = [
                 'id' => $sale->id,
+                'source' => $sale->source,
                 'order_number' => $sale->order_number,
                 'customer_name' => $sale->customer_name,
                 'sold_at' => $sale->sold_at->toIso8601String(),

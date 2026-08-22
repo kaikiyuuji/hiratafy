@@ -45,12 +45,38 @@ composer share
 
 O comando gera o build, inicia um servidor local isolado e exibe um endereço
 HTTPS `trycloudflare.com`. Mantenha o terminal aberto enquanto estiver usando o
-link e pressione `Ctrl+C` para encerrar.
+link e pressione `Ctrl+C` para encerrar. Confirme com `S` caso o Windows
+pergunte se deseja finalizar o arquivo em lotes.
 
 O endereço muda a cada execução. O modo de compartilhamento desativa erros
 detalhados, usa cookies seguros, reconhece o HTTPS do túnel e oculta passkeys,
 pois elas são vinculadas ao domínio. O cadastro público permanece desabilitado:
 somente usuários já cadastrados podem entrar.
+
+O mesmo comando mantém a fila local ativa. Quando a integração Shopify estiver
+configurada, ele atualiza automaticamente a URL do webhook e busca pedidos pagos
+que possam ter ocorrido enquanto o computador estava desligado.
+
+## Integração com a Shopify
+
+Crie um app para a sua própria loja no Shopify Dev Dashboard, habilite o escopo
+`read_orders`, publique a versão e instale o app na loja. Depois, copie o Client
+ID e o Client secret para o `.env`:
+
+```env
+SHOPIFY_CLIENT_ID=
+SHOPIFY_CLIENT_SECRET=
+```
+
+No Hiratafy, abra **Shopify** no menu lateral, informe o domínio permanente
+`sua-loja.myshopify.com`, escolha a campanha padrão e ative a integração. Na
+próxima execução de `composer share`, o webhook `orders/paid` será criado ou
+atualizado automaticamente.
+
+Somente o nome e a quantidade de cada produto são importados. Preço, desconto,
+frete e custo do fornecedor são calculados pelas regras locais do Hiratafy. Se
+um nome não coincidir, o pedido fica em **Requer atenção** até que o produto seja
+vinculado na tela da integração.
 
 ## Qualidade
 

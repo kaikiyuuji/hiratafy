@@ -27,5 +27,8 @@ test('sharing command uses hardened runtime settings', function () {
         ->toContain("\$env:APP_DEBUG = 'false'")
         ->toContain("\$env:SESSION_SECURE_COOKIE = 'true'")
         ->toContain("\$env:TRUST_TUNNEL_PROXIES = 'true'")
-        ->toContain("\$env:FORTIFY_PASSKEYS_LOGIN_ENABLED = 'false'");
+        ->toContain("\$env:FORTIFY_PASSKEYS_LOGIN_ENABLED = 'false'")
+        ->toContain('queue:work')
+        ->toContain('npx concurrently')
+        ->toContain('shopify:setup');
 });

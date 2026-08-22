@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'shopify' => [
+        'client_id' => env('SHOPIFY_CLIENT_ID'),
+        'client_secret' => env('SHOPIFY_CLIENT_SECRET'),
+        'api_version' => env('SHOPIFY_API_VERSION', '2026-07'),
+        'initial_sync_days' => (int) env('SHOPIFY_INITIAL_SYNC_DAYS', 7),
+    ],
+
 ];

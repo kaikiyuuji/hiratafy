@@ -8,7 +8,12 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\ShopifyIntegrationController;
+use App\Http\Controllers\ShopifyWebhookController;
 use Illuminate\Support\Facades\Route;
+
+Route::post('webhooks/shopify/orders-paid', ShopifyWebhookController::class)
+    ->name('shopify.webhooks.orders-paid');
 
 Route::get('/', fn () => auth()->check()
     ? to_route('dashboard')
@@ -49,6 +54,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('vendas/{sale}/editar', [SaleController::class, 'edit'])->name('sales.edit');
     Route::put('vendas/{sale}', [SaleController::class, 'update'])->name('sales.update');
     Route::delete('vendas/{sale}', [SaleController::class, 'destroy'])->name('sales.destroy');
+
+    Route::get('integracoes/shopify', [ShopifyIntegrationController::class, 'index'])
+        ->name('shopify.index');
+    Route::put('integracoes/shopify', [ShopifyIntegrationController::class, 'update'])
+        ->name('shopify.update');
+    Route::post('integracoes/shopify/conectar', [ShopifyIntegrationController::class, 'connect'])
+        ->name('shopify.connect');
+    Route::post('integracoes/shopify/sincronizar', [ShopifyIntegrationController::class, 'sync'])
+        ->name('shopify.sync');
+    Route::post('integracoes/shopify/eventos/{event}/tentar-novamente', [ShopifyIntegrationController::class, 'retry'])
+        ->name('shopify.events.retry');
+    Route::post('integracoes/shopify/eventos/{event}/vincular-produto', [ShopifyIntegrationController::class, 'mapProduct'])
+        ->name('shopify.events.map-product');
 });
 
 require __DIR__.'/settings.php';

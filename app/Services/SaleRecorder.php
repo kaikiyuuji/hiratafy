@@ -16,6 +16,8 @@ class SaleRecorder
     /**
      * @param  array{
      *     campaign_id: int|null,
+     *     source?: string,
+     *     external_id?: string|null,
      *     order_number: string|null,
      *     customer_name: string|null,
      *     sold_at: string,
@@ -24,11 +26,15 @@ class SaleRecorder
      *     items: array<int, array{product_id: int, quantity: int}>
      * }  $data
      */
-    public function save(User $user, array $data, ?Sale $sale = null): Sale
-    {
+    public function save(
+        User $user,
+        array $data,
+        ?Sale $sale = null,
+        bool $requireCampaignSpend = true,
+    ): Sale {
         $soldAt = Carbon::parse($data['sold_at']);
 
-        if ($data['campaign_id'] !== null) {
+        if ($requireCampaignSpend && $data['campaign_id'] !== null) {
             $hasDailyInvestment = CampaignDailySpend::query()
                 ->where('campaign_id', $data['campaign_id'])
                 ->whereDate('spend_date', $soldAt->toDateString())
@@ -52,6 +58,8 @@ class SaleRecorder
             $sale ??= new Sale;
             $sale->fill([
                 'user_id' => $user->id,
+                'source' => $data['source'] ?? $sale->source ?? 'manual',
+                'external_id' => $data['external_id'] ?? $sale->external_id,
                 'campaign_id' => $data['campaign_id'],
                 'order_number' => $data['order_number'],
                 'customer_name' => $data['customer_name'],

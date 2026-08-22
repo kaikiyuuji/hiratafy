@@ -219,7 +219,7 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
             <div className="flex flex-1 flex-col gap-4 p-3 sm:gap-6 sm:p-4 md:p-6">
                 <PageHeader
                     title="Vendas"
-                    description="Histórico manual de pedidos com receita, descontos e custo de produto já calculados."
+                    description="Pedidos manuais e da Shopify com receita, descontos e custo de produto já calculados."
                     actions={
                         <Button asChild>
                             <Link href="/vendas/nova">
@@ -452,6 +452,14 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                                                     {sale.order_number ??
                                                         `Venda #${sale.id}`}
                                                 </p>
+                                                {sale.source === 'shopify' && (
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="mt-1 border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300"
+                                                    >
+                                                        Shopify
+                                                    </Badge>
+                                                )}
                                                 {sale.customer_name && (
                                                     <p className="text-xs text-muted-foreground">
                                                         {sale.customer_name}

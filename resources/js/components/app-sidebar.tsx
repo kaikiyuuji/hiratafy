@@ -8,6 +8,7 @@ import {
     Package,
     Settings,
     ShoppingBag,
+    Store,
     Tags,
     WalletCards,
 } from 'lucide-react';
@@ -83,6 +84,11 @@ const navSections: NavSection[] = [
     {
         label: 'Sistema',
         items: [
+            {
+                title: 'Shopify',
+                href: '/integracoes/shopify',
+                icon: Store,
+            },
             {
                 title: 'Regras financeiras',
                 href: '/settings/financial',

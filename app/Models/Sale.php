@@ -10,6 +10,8 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $user_id
+ * @property string $source
+ * @property string|null $external_id
  * @property int|null $campaign_id
  * @property string|null $order_number
  * @property string|null $customer_name
@@ -26,6 +28,8 @@ class Sale extends Model
 {
     protected $fillable = [
         'user_id',
+        'source',
+        'external_id',
         'campaign_id',
         'order_number',
         'customer_name',

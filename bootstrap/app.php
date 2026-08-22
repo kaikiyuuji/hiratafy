@@ -15,11 +15,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        if (env('TRUST_TUNNEL_PROXIES', false)) {
+        if (filter_var(getenv('TRUST_TUNNEL_PROXIES'), FILTER_VALIDATE_BOOL)) {
             $middleware->trustProxies(at: '*');
         }
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
+
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/shopify/*',
+        ]);
 
         $middleware->web(append: [
             HandleAppearance::class,

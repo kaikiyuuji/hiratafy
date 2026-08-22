@@ -62,6 +62,7 @@ export type CampaignOption = {
 
 export type SaleRow = {
     id: number;
+    source: 'manual' | 'shopify';
     order_number: string | null;
     customer_name: string | null;
     sold_at: string;
