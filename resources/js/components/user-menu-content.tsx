@@ -1,5 +1,6 @@
 import { Link, router } from '@inertiajs/react';
-import { LogOut, Settings } from 'lucide-react';
+import { Download, LogOut, Settings } from 'lucide-react';
+import { usePwa } from '@/components/pwa-provider';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -19,6 +20,7 @@ type Props = {
 
 export function UserMenuContent({ user, compact = false }: Props) {
     const cleanup = useMobileNavigation();
+    const { canInstall, install } = usePwa();
 
     const handleLogout = () => {
         cleanup();
@@ -48,6 +50,15 @@ export function UserMenuContent({ user, compact = false }: Props) {
                             </Link>
                         </DropdownMenuItem>
                     </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                </>
+            )}
+            {canInstall && (
+                <>
+                    <DropdownMenuItem onSelect={() => void install()}>
+                        <Download className="mr-2" />
+                        Instalar aplicativo
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                 </>
             )}

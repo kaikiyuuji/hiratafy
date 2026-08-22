@@ -3,6 +3,7 @@ import {
     BadgePercent,
     ChartNoAxesCombined,
     ChartPie,
+    Download,
     Ellipsis,
     LayoutDashboard,
     Megaphone,
@@ -14,6 +15,7 @@ import {
     WalletCards,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { usePwa } from '@/components/pwa-provider';
 import { Button } from '@/components/ui/button';
 import {
     Sheet,
@@ -51,6 +53,7 @@ const moreItems: Array<{
 
 export function MobileBottomNav() {
     const { isCurrentOrParentUrl, isCurrentUrl } = useCurrentUrl();
+    const { canInstall, install } = usePwa();
     const isNewSale = isCurrentUrl('/vendas/nova');
     const isMoreActive = moreItems.some((item) =>
         isCurrentOrParentUrl(item.href),
@@ -122,6 +125,30 @@ export function MobileBottomNav() {
                                 Acesse o catálogo, relatórios e configurações.
                             </SheetDescription>
                         </SheetHeader>
+                        {canInstall && (
+                            <div className="px-4">
+                                <SheetClose asChild>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="h-auto w-full justify-start gap-3 rounded-xl p-3 text-left"
+                                        onClick={() => void install()}
+                                    >
+                                        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                                            <Download className="size-4" />
+                                        </span>
+                                        <span className="grid min-w-0 gap-0.5">
+                                            <span className="font-medium">
+                                                Instalar Hiratafy
+                                            </span>
+                                            <span className="text-xs font-normal text-muted-foreground">
+                                                Use em tela cheia pelo ícone.
+                                            </span>
+                                        </span>
+                                    </Button>
+                                </SheetClose>
+                            </div>
+                        )}
                         <div className="grid grid-cols-2 gap-2 px-4 pb-4">
                             {moreItems.map((item) => (
                                 <SheetClose key={item.href} asChild>

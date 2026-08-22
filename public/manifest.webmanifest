@@ -1,0 +1,81 @@
+{
+    "id": "/",
+    "name": "Hiratafy",
+    "short_name": "Hiratafy",
+    "description": "Controle de vendas, produtos, campanhas e lucro real do ecommerce.",
+    "lang": "pt-BR",
+    "dir": "ltr",
+    "start_url": "/dashboard",
+    "scope": "/",
+    "display": "standalone",
+    "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+    "orientation": "any",
+    "background_color": "#f7faf7",
+    "theme_color": "#0f7a45",
+    "categories": ["business", "finance", "productivity"],
+    "icons": [
+        {
+            "src": "/pwa/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/pwa/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/pwa/icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Nova venda",
+            "short_name": "Nova venda",
+            "description": "Registrar uma nova venda",
+            "url": "/vendas/nova",
+            "icons": [
+                {
+                    "src": "/pwa/icon-192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                }
+            ]
+        },
+        {
+            "name": "Vendas",
+            "short_name": "Vendas",
+            "description": "Consultar o histórico de vendas",
+            "url": "/vendas",
+            "icons": [
+                {
+                    "src": "/pwa/icon-192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                }
+            ]
+        },
+        {
+            "name": "Investimentos",
+            "short_name": "Mídia",
+            "description": "Acompanhar investimentos em campanhas",
+            "url": "/investimentos",
+            "icons": [
+                {
+                    "src": "/pwa/icon-192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                }
+            ]
+        }
+    ],
+    "launch_handler": {
+        "client_mode": "navigate-existing"
+    },
+    "prefer_related_applications": false
+}

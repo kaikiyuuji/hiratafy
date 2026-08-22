@@ -133,12 +133,25 @@
 }
 
 @layer base {
+    html {
+        min-height: 100%;
+    }
+
     * {
         @apply border-border;
     }
 
     body {
+        min-height: 100dvh;
         @apply bg-background text-foreground;
+    }
+
+    @media (display-mode: standalone) {
+        body {
+            padding-top: env(safe-area-inset-top);
+            overscroll-behavior-y: none;
+            -webkit-tap-highlight-color: transparent;
+        }
     }
 }
 

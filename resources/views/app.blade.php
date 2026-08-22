@@ -2,7 +2,17 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="description" content="Controle de vendas, produtos, campanhas e lucro real do ecommerce.">
+        <meta name="application-name" content="Hiratafy">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-title" content="Hiratafy">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="format-detection" content="telephone=no">
+        <meta name="theme-color" content="#0f7a45" media="(prefers-color-scheme: light)">
+        <meta name="theme-color" content="#101410" media="(prefers-color-scheme: dark)">
+        <meta name="msapplication-TileColor" content="#101410">
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>
@@ -30,6 +40,7 @@
             }
         </style>
 
+        <link rel="manifest" href="/manifest.webmanifest">
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon-48x48.png" type="image/png" sizes="48x48">
         <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
