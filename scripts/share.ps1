@@ -7,8 +7,6 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$publicPath = Join-Path $projectRoot 'public'
-$routerPath = Join-Path $projectRoot 'vendor\laravel\framework\src\Illuminate\Foundation\resources\server.php'
 $originUrl = "http://127.0.0.1:$Port"
 $originalLocation = Get-Location
 $tunnelOutput = [System.IO.Path]::GetTempFileName()
@@ -31,10 +29,6 @@ try {
 
     if (@($cloudflaredConfigs).Count -gt 0) {
         throw 'O Quick Tunnel nao funciona enquanto existir um config.yml ou config.yaml em .cloudflared.'
-    }
-
-    if (-not (Test-Path -LiteralPath $routerPath)) {
-        throw 'O roteador do servidor Laravel nao foi encontrado. Execute composer install.'
     }
 
     Write-Host 'Preparando o build de producao do Hiratafy...'
@@ -119,7 +113,7 @@ try {
     Write-Host ''
     Write-Host 'Mantenha este terminal aberto. Pressione Ctrl+C para encerrar.'
 
-    $serverCommand = "`"$php`" -S 127.0.0.1:$Port -t `"$publicPath`" `"$routerPath`""
+    $serverCommand = "`"$php`" artisan serve --host=127.0.0.1 --port=$Port --tries=1 --no-reload --no-ansi --no-interaction"
     $queueCommand = "`"$php`" artisan queue:work --sleep=1 --tries=3 --timeout=120 --no-interaction"
     & npx concurrently `
         --names 'server,queue' `

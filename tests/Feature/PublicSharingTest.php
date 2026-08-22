@@ -30,5 +30,7 @@ test('sharing command uses hardened runtime settings', function () {
         ->toContain("\$env:FORTIFY_PASSKEYS_LOGIN_ENABLED = 'false'")
         ->toContain('queue:work')
         ->toContain('npx concurrently')
+        ->toContain('artisan serve')
+        ->not->toContain('-S 127.0.0.1:$Port -t')
         ->toContain('shopify:setup');
 });
