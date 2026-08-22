@@ -35,6 +35,23 @@ composer dev
 
 O projeto usa Laravel, Inertia, React, TypeScript, Tailwind CSS, shadcn/ui e Pest.
 
+## Compartilhamento temporário
+
+Com o `cloudflared` instalado, execute:
+
+```bash
+composer share
+```
+
+O comando gera o build, inicia um servidor local isolado e exibe um endereço
+HTTPS `trycloudflare.com`. Mantenha o terminal aberto enquanto estiver usando o
+link e pressione `Ctrl+C` para encerrar.
+
+O endereço muda a cada execução. O modo de compartilhamento desativa erros
+detalhados, usa cookies seguros, reconhece o HTTPS do túnel e oculta passkeys,
+pois elas são vinculadas ao domínio. O cadastro público permanece desabilitado:
+somente usuários já cadastrados podem entrar.
+
 ## Qualidade
 
 ```bash
