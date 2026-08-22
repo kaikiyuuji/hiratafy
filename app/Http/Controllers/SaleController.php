@@ -161,11 +161,14 @@ class SaleController extends Controller
     {
         $user = $request->user();
         abort_unless($user instanceof User, 401);
-        $recorder->save($user, $request->saleData());
+        $sale = $recorder->save($user, $request->saleData());
+        $identifier = $sale->order_number
+            ? "Pedido #{$sale->order_number}"
+            : "Venda #{$sale->id}";
 
         return to_route('sales.index')->with('toast', [
             'type' => 'success',
-            'message' => 'Venda registrada e valores calculados.',
+            'message' => "{$identifier}: registro concluído e valores calculados.",
         ]);
     }
 
@@ -205,22 +208,28 @@ class SaleController extends Controller
         $this->authorizeOwnership($request, $sale);
         $user = $request->user();
         abort_unless($user instanceof User, 401);
-        $recorder->save($user, $request->saleData(), $sale);
+        $sale = $recorder->save($user, $request->saleData(), $sale);
+        $identifier = $sale->order_number
+            ? "Pedido #{$sale->order_number}"
+            : "Venda #{$sale->id}";
 
         return to_route('sales.index')->with('toast', [
             'type' => 'success',
-            'message' => 'Venda recalculada e atualizada.',
+            'message' => "{$identifier}: valores recalculados e atualizados.",
         ]);
     }
 
     public function destroy(Request $request, Sale $sale): RedirectResponse
     {
         $this->authorizeOwnership($request, $sale);
+        $identifier = $sale->order_number
+            ? "Pedido #{$sale->order_number}"
+            : "Venda #{$sale->id}";
         $sale->delete();
 
         return back()->with('toast', [
             'type' => 'success',
-            'message' => 'Venda excluída.',
+            'message' => "{$identifier}: exclusão concluída.",
         ]);
     }
 

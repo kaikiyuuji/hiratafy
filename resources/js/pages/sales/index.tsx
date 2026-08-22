@@ -2,8 +2,13 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Pencil, Plus, Search, ShoppingBag, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { DateRangeShortcuts } from '@/components/date-range-shortcuts';
+import {
+    currentMonthDateRange,
+    DateRangeShortcuts,
+} from '@/components/date-range-shortcuts';
 import { EmptyState } from '@/components/empty-state';
+import { FilterChips } from '@/components/filter-chips';
+import type { FilterChip } from '@/components/filter-chips';
 import { FilterPanel } from '@/components/filter-panel';
 import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +30,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
 import {
     Table,
     TableBody,
@@ -55,6 +62,24 @@ type Props = {
     };
 };
 
+type SalesFilterState = {
+    startDate: string;
+    endDate: string;
+    campaignId: string;
+    itemsCount: string;
+    search: string;
+    sort: string;
+};
+
+const salesSortLabels: Record<string, string> = {
+    oldest: 'Mais antigas',
+    customer_asc: 'Cliente (A–Z)',
+    customer_desc: 'Cliente (Z–A)',
+    items_desc: 'Maior quantidade',
+    revenue_desc: 'Maior faturamento',
+    profit_desc: 'Maior lucro',
+};
+
 export default function SalesIndex({ sales, campaigns, filters }: Props) {
     const [startDate, setStartDate] = useState(filters.start_date);
     const [endDate, setEndDate] = useState(filters.end_date);
@@ -66,23 +91,102 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
     );
     const [search, setSearch] = useState(filters.search);
     const [sort, setSort] = useState(filters.sort);
+    const [isFiltering, setIsFiltering] = useState(false);
     const [deleting, setDeleting] = useState<SaleRow | null>(null);
+    const defaultPeriod = currentMonthDateRange();
+    const activeFilterChips: FilterChip[] = [
+        ...(filters.start_date !== defaultPeriod.startDate ||
+        filters.end_date !== defaultPeriod.endDate
+            ? [
+                  {
+                      id: 'period',
+                      label: `${formatDate(filters.start_date)} – ${formatDate(filters.end_date)}`,
+                      onRemove: () =>
+                          applyFilters({
+                              startDate: defaultPeriod.startDate,
+                              endDate: defaultPeriod.endDate,
+                          }),
+                  },
+              ]
+            : []),
+        ...(filters.campaign_id !== null
+            ? [
+                  {
+                      id: 'campaign',
+                      label:
+                          campaigns.find(
+                              (campaign) => campaign.id === filters.campaign_id,
+                          )?.name ?? 'Campanha selecionada',
+                      onRemove: () => applyFilters({ campaignId: 'all' }),
+                  },
+              ]
+            : []),
+        ...(filters.items_count !== null
+            ? [
+                  {
+                      id: 'items',
+                      label: `${formatNumber(filters.items_count)} itens`,
+                      onRemove: () => applyFilters({ itemsCount: '' }),
+                  },
+              ]
+            : []),
+        ...(filters.search !== ''
+            ? [
+                  {
+                      id: 'search',
+                      label: `Busca: “${filters.search}”`,
+                      onRemove: () => applyFilters({ search: '' }),
+                  },
+              ]
+            : []),
+        ...(filters.sort !== 'latest'
+            ? [
+                  {
+                      id: 'sort',
+                      label:
+                          salesSortLabels[filters.sort] ?? 'Ordenação aplicada',
+                      onRemove: () => applyFilters({ sort: 'latest' }),
+                  },
+              ]
+            : []),
+    ];
 
-    function applyFilters(
-        nextStartDate: string = startDate,
-        nextEndDate: string = endDate,
-    ) {
+    function applyFilters(overrides: Partial<SalesFilterState> = {}) {
+        const nextFilters: SalesFilterState = {
+            startDate,
+            endDate,
+            campaignId,
+            itemsCount,
+            search,
+            sort,
+            ...overrides,
+        };
+
+        setStartDate(nextFilters.startDate);
+        setEndDate(nextFilters.endDate);
+        setCampaignId(nextFilters.campaignId);
+        setItemsCount(nextFilters.itemsCount);
+        setSearch(nextFilters.search);
+        setSort(nextFilters.sort);
         router.get(
             '/vendas',
             {
-                start_date: nextStartDate,
-                end_date: nextEndDate,
-                campaign_id: campaignId === 'all' ? '' : campaignId,
-                items_count: itemsCount,
-                search,
-                sort,
+                start_date: nextFilters.startDate,
+                end_date: nextFilters.endDate,
+                campaign_id:
+                    nextFilters.campaignId === 'all'
+                        ? ''
+                        : nextFilters.campaignId,
+                items_count: nextFilters.itemsCount,
+                search: nextFilters.search,
+                sort: nextFilters.sort,
             },
-            { preserveState: true, replace: true },
+            {
+                preserveState: true,
+                replace: true,
+                onStart: () => setIsFiltering(true),
+                onFinish: () => setIsFiltering(false),
+            },
         );
     }
 
@@ -92,9 +196,10 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
     }
 
     function applyDateRange(nextStartDate: string, nextEndDate: string) {
-        setStartDate(nextStartDate);
-        setEndDate(nextEndDate);
-        applyFilters(nextStartDate, nextEndDate);
+        applyFilters({
+            startDate: nextStartDate,
+            endDate: nextEndDate,
+        });
     }
 
     function deleteSale() {
@@ -133,6 +238,7 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                             endDate={endDate}
                             todayLabel="Vendas de hoje"
                             showLastThirtyDays={false}
+                            disabled={isFiltering}
                             onSelect={(range) =>
                                 applyDateRange(range.startDate, range.endDate)
                             }
@@ -282,14 +388,24 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                             type="submit"
                             variant="outline"
                             className="self-end"
+                            disabled={isFiltering}
                         >
+                            {isFiltering && <Spinner />}
                             Filtrar
                         </Button>
                     </form>
                 </FilterPanel>
 
+                <FilterChips chips={activeFilterChips} />
+
                 <Card className="gap-0 overflow-hidden py-0 shadow-xs">
-                    {sales.data.length === 0 ? (
+                    {isFiltering ? (
+                        <div className="grid gap-3 p-4 sm:p-5">
+                            {Array.from({ length: 6 }, (_, index) => (
+                                <Skeleton key={index} className="h-16 w-full" />
+                            ))}
+                        </div>
+                    ) : sales.data.length === 0 ? (
                         <EmptyState
                             icon={ShoppingBag}
                             title="Nenhuma venda encontrada"

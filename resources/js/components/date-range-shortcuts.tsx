@@ -2,7 +2,7 @@ import { CalendarDays, CalendarRange } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 
-type DateRange = {
+export type DateRange = {
     startDate: string;
     endDate: string;
 };
@@ -12,6 +12,7 @@ type Props = DateRange & {
     todayLabel?: string;
     showLastThirtyDays?: boolean;
     className?: string;
+    disabled?: boolean;
 };
 
 export function DateRangeShortcuts({
@@ -21,6 +22,7 @@ export function DateRangeShortcuts({
     todayLabel = 'Hoje',
     showLastThirtyDays = true,
     className,
+    disabled = false,
 }: Props) {
     const today = new Date();
     const thirtyDaysAgo = new Date(today);
@@ -54,6 +56,7 @@ export function DateRangeShortcuts({
             size="sm"
             value={selected}
             onValueChange={select}
+            disabled={disabled}
             aria-label="Períodos rápidos"
             className={cn('w-full sm:w-auto', className)}
         >
@@ -77,6 +80,17 @@ export function DateRangeShortcuts({
             )}
         </ToggleGroup>
     );
+}
+
+export function currentMonthDateRange(): DateRange {
+    const today = new Date();
+
+    return {
+        startDate: formatDateInput(
+            new Date(today.getFullYear(), today.getMonth(), 1),
+        ),
+        endDate: formatDateInput(today),
+    };
 }
 
 function formatDateInput(date: Date): string {
