@@ -130,8 +130,6 @@ class ShopifyApi
                                     name
                                     title
                                     quantity
-                                    product { id title }
-                                    variant { id title }
                                 }
                             }
                         }
@@ -208,13 +206,19 @@ class ShopifyApi
         string $query,
         array $variables = [],
     ): array {
+        $payload = ['query' => $query];
+
+        if ($variables !== []) {
+            $payload['variables'] = $variables;
+        }
+
         $response = $this->client($integration)->post(
             sprintf(
                 'https://%s/admin/api/%s/graphql.json',
                 $this->shopDomain($integration),
                 config('services.shopify.api_version'),
             ),
-            ['query' => $query, 'variables' => $variables],
+            $payload,
         );
         $response->throw();
         $errors = $response->json('errors');

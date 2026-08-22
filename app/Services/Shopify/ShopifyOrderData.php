@@ -93,13 +93,12 @@ class ShopifyOrderData
             }
 
             $item = $this->normalizeItem(
-                name: data_get($lineItem, 'product.title')
-                    ?? $lineItem['title']
+                name: $lineItem['title']
                     ?? $lineItem['name']
                     ?? null,
                 quantity: $lineItem['quantity'] ?? null,
-                productId: data_get($lineItem, 'product.id'),
-                variantId: data_get($lineItem, 'variant.id'),
+                productId: null,
+                variantId: null,
             );
 
             if ($item !== null) {

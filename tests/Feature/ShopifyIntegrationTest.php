@@ -303,7 +303,50 @@ test('shopify api creates the paid orders webhook at the current tunnel url', fu
 
     Http::assertSent(fn ($request): bool => $request->url()
         === 'https://loja-mrgk.myshopify.com/admin/oauth/access_token');
+    Http::assertSent(fn ($request): bool => str_contains($request->body(), 'query ShopInfo')
+        && ! array_key_exists('variables', $request->data()));
     Http::assertSent(fn ($request): bool => str_contains($request->body(), 'ORDERS_PAID'));
+});
+
+test('shopify order sync only requests fields covered by the read orders scope', function () {
+    config()->set('services.shopify.client_id', 'client-id');
+    config()->set('services.shopify.client_secret', 'client-secret');
+    config()->set('services.shopify.api_version', '2026-07');
+    $user = User::factory()->create();
+    $integration = ShopifyIntegration::create([
+        'user_id' => $user->id,
+        'shop_domain' => 'loja-mrgk.myshopify.com',
+        'is_active' => true,
+    ]);
+    Http::fake([
+        '*/admin/oauth/access_token' => Http::response([
+            'access_token' => 'access-token',
+            'expires_in' => 86399,
+        ]),
+        '*/admin/api/2026-07/graphql.json' => Http::response([
+            'data' => [
+                'orders' => [
+                    'nodes' => [],
+                    'pageInfo' => [
+                        'hasNextPage' => false,
+                        'endCursor' => null,
+                    ],
+                ],
+            ],
+        ]),
+    ]);
+
+    expect(app(ShopifyApi::class)->paidOrdersSince($integration, now()->subDay()))
+        ->toBe([]);
+
+    Http::assertSent(function ($request): bool {
+        $query = $request->data()['query'] ?? null;
+
+        return is_string($query)
+            && str_contains($query, 'query PaidOrders')
+            && ! str_contains($query, 'product {')
+            && ! str_contains($query, 'variant {');
+    });
 });
 
 test('shopify api explains when the app is not installed in the store', function () {
