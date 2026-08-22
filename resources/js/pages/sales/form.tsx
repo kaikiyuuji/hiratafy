@@ -15,6 +15,7 @@ import {
 import type { FormEvent } from 'react';
 import InputError from '@/components/input-error';
 import { PageHeader } from '@/components/page-header';
+import { QuantitySelector } from '@/components/quantity-selector';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -461,10 +462,14 @@ export default function SaleForm({
                                     return (
                                         <div
                                             key={index}
-                                            className="grid grid-cols-3 items-start gap-3 rounded-lg border p-3 sm:gap-4 sm:p-4 md:grid-cols-[minmax(220px,1fr)_130px_auto]"
+                                            className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded-lg border p-3 sm:gap-4 sm:p-4 md:grid-cols-[minmax(220px,1fr)_160px_auto]"
                                         >
-                                            <div className="col-span-3 grid gap-2 md:col-span-1">
-                                                <Label>Produto</Label>
+                                            <div className="col-span-2 grid min-w-0 gap-2 md:col-span-1">
+                                                <Label
+                                                    htmlFor={`product_${index}`}
+                                                >
+                                                    Produto
+                                                </Label>
                                                 <Select
                                                     value={item.product_id}
                                                     onValueChange={(value) =>
@@ -475,10 +480,16 @@ export default function SaleForm({
                                                         )
                                                     }
                                                 >
-                                                    <SelectTrigger className="w-full">
+                                                    <SelectTrigger
+                                                        id={`product_${index}`}
+                                                        className="w-full min-w-0"
+                                                    >
                                                         <SelectValue placeholder="Selecione" />
                                                     </SelectTrigger>
-                                                    <SelectContent>
+                                                    <SelectContent
+                                                        align="start"
+                                                        className="w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]"
+                                                    >
                                                         {products.map(
                                                             (product) => (
                                                                 <SelectItem
@@ -494,13 +505,15 @@ export default function SaleForm({
                                                                         ),
                                                                     )}
                                                                 >
-                                                                    {
-                                                                        product.name
-                                                                    }{' '}
-                                                                    ·{' '}
-                                                                    {
-                                                                        product.category_name
-                                                                    }
+                                                                    <span className="min-w-0 whitespace-normal">
+                                                                        {
+                                                                            product.name
+                                                                        }{' '}
+                                                                        ·{' '}
+                                                                        {
+                                                                            product.category_name
+                                                                        }
+                                                                    </span>
                                                                 </SelectItem>
                                                             ),
                                                         )}
@@ -514,23 +527,20 @@ export default function SaleForm({
                                                     }
                                                 />
                                             </div>
-                                            <div className="col-span-2 grid gap-2 md:col-span-1">
+                                            <div className="grid min-w-0 gap-2">
                                                 <Label
                                                     htmlFor={`quantity_${index}`}
                                                 >
                                                     Quantidade
                                                 </Label>
-                                                <Input
+                                                <QuantitySelector
                                                     id={`quantity_${index}`}
-                                                    type="number"
-                                                    min="1"
-                                                    step="1"
                                                     value={item.quantity}
-                                                    onChange={(event) =>
+                                                    onValueChange={(value) =>
                                                         updateItem(
                                                             index,
                                                             'quantity',
-                                                            event.target.value,
+                                                            value,
                                                         )
                                                     }
                                                 />
@@ -557,7 +567,7 @@ export default function SaleForm({
                                             >
                                                 <Trash2 />
                                             </Button>
-                                            <div className="col-span-3 grid grid-cols-2 gap-3 rounded-lg bg-muted/45 p-3 sm:grid-cols-3">
+                                            <div className="col-span-2 grid grid-cols-2 gap-3 rounded-lg bg-muted/45 p-3 sm:grid-cols-3 md:col-span-3">
                                                 <LineMetric
                                                     label="Preço unit."
                                                     value={
@@ -598,7 +608,7 @@ export default function SaleForm({
                                                 />
                                             </div>
                                             {line && (
-                                                <div className="col-span-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground">
+                                                <div className="col-span-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground md:col-span-3">
                                                     <span>
                                                         Categoria:{' '}
                                                         {

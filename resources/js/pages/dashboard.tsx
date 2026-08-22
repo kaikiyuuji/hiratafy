@@ -19,6 +19,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { DailyPerformanceChart } from '@/components/daily-performance-chart';
 import type { DailyMetric } from '@/components/daily-performance-chart';
+import { DateRangeShortcuts } from '@/components/date-range-shortcuts';
 import { EmptyState } from '@/components/empty-state';
 import { FilterPanel } from '@/components/filter-panel';
 import { MetricCard } from '@/components/metric-card';
@@ -111,13 +112,19 @@ export default function Dashboard({
         (day) => day.orders > 0 || day.ad_spend_cents > 0,
     ).length;
 
-    function filter(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault();
+    function applyPeriod(nextStartDate: string, nextEndDate: string) {
+        setStartDate(nextStartDate);
+        setEndDate(nextEndDate);
         router.get(
             '/dashboard',
-            { start_date: startDate, end_date: endDate },
-            { preserveScroll: true, preserveState: true },
+            { start_date: nextStartDate, end_date: nextEndDate },
+            { preserveScroll: true, preserveState: true, replace: true },
         );
+    }
+
+    function filter(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        applyPeriod(startDate, endDate);
     }
 
     return (
@@ -140,6 +147,15 @@ export default function Dashboard({
                 <FilterPanel
                     summary={`${formatDate(filters.start_date)} – ${formatDate(filters.end_date)}`}
                     resetHref="/dashboard?reset_filters=1"
+                    quickActions={
+                        <DateRangeShortcuts
+                            startDate={startDate}
+                            endDate={endDate}
+                            onSelect={(range) =>
+                                applyPeriod(range.startDate, range.endDate)
+                            }
+                        />
+                    }
                 >
                     <form
                         onSubmit={filter}

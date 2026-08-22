@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Pencil, Plus, Search, ShoppingBag, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { DateRangeShortcuts } from '@/components/date-range-shortcuts';
 import { EmptyState } from '@/components/empty-state';
 import { FilterPanel } from '@/components/filter-panel';
 import { PageHeader } from '@/components/page-header';
@@ -67,13 +68,15 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
     const [sort, setSort] = useState(filters.sort);
     const [deleting, setDeleting] = useState<SaleRow | null>(null);
 
-    function filter(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault();
+    function applyFilters(
+        nextStartDate: string = startDate,
+        nextEndDate: string = endDate,
+    ) {
         router.get(
             '/vendas',
             {
-                start_date: startDate,
-                end_date: endDate,
+                start_date: nextStartDate,
+                end_date: nextEndDate,
                 campaign_id: campaignId === 'all' ? '' : campaignId,
                 items_count: itemsCount,
                 search,
@@ -81,6 +84,17 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
             },
             { preserveState: true, replace: true },
         );
+    }
+
+    function filter(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        applyFilters();
+    }
+
+    function applyDateRange(nextStartDate: string, nextEndDate: string) {
+        setStartDate(nextStartDate);
+        setEndDate(nextEndDate);
+        applyFilters(nextStartDate, nextEndDate);
     }
 
     function deleteSale() {
@@ -113,6 +127,17 @@ export default function SalesIndex({ sales, campaigns, filters }: Props) {
                 <FilterPanel
                     summary={`${formatDate(filters.start_date)} – ${formatDate(filters.end_date)} · ${formatNumber(sales.total)} resultado${sales.total === 1 ? '' : 's'}`}
                     resetHref="/vendas?reset_filters=1"
+                    quickActions={
+                        <DateRangeShortcuts
+                            startDate={startDate}
+                            endDate={endDate}
+                            todayLabel="Vendas de hoje"
+                            showLastThirtyDays={false}
+                            onSelect={(range) =>
+                                applyDateRange(range.startDate, range.endDate)
+                            }
+                        />
+                    }
                 >
                     <form
                         onSubmit={filter}
