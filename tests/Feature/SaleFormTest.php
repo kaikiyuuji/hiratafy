@@ -88,6 +88,77 @@ test('shipping can be charged on create and removed on edit', function () {
         ->revenue_cents->toBe(12000);
 });
 
+test('supplier cost can be overridden on edit and restored to automatic', function () {
+    $user = User::factory()->create();
+    $category = Category::create([
+        'user_id' => $user->id,
+        'name' => 'Products',
+    ]);
+    $product = Product::create([
+        'user_id' => $user->id,
+        'category_id' => $category->id,
+        'name' => 'Product',
+        'sale_price_cents' => 2000,
+        'base_cost_cents' => 900,
+    ]);
+    $saleData = [
+        'campaign_id' => null,
+        'order_number' => '1001',
+        'customer_name' => null,
+        'sold_at' => '2026-08-20T12:00',
+        'shipping_mode' => 'free',
+        'notes' => null,
+        'items' => [
+            ['product_id' => $product->id, 'quantity' => 2],
+        ],
+    ];
+
+    $this->actingAs($user)->post(route('sales.store'), [
+        ...$saleData,
+        'supplier_cost_override_enabled' => true,
+        'supplier_cost_override' => '1.00',
+    ])->assertRedirect(route('sales.index'));
+
+    $sale = Sale::query()->where('user_id', $user->id)->firstOrFail();
+    expect($sale)
+        ->product_cost_cents->toBe(1800)
+        ->supplier_cost_override_cents->toBeNull()
+        ->gross_profit_cents->toBe(2200);
+
+    $this->actingAs($user)->put(route('sales.update', $sale), [
+        ...$saleData,
+        'supplier_cost_override_enabled' => true,
+        'supplier_cost_override' => '',
+    ])->assertSessionHasErrors('supplier_cost_override');
+
+    $this->actingAs($user)->put(route('sales.update', $sale), [
+        ...$saleData,
+        'supplier_cost_override_enabled' => true,
+        'supplier_cost_override' => '12.34',
+    ])->assertRedirect(route('sales.index'));
+
+    expect($sale->refresh())
+        ->product_cost_cents->toBe(1234)
+        ->supplier_cost_override_cents->toBe(1234)
+        ->gross_profit_cents->toBe(2766)
+        ->and($sale->items()->sum('cost_amount_cents'))->toBe(1800);
+
+    $this->actingAs($user)->get(route('sales.edit', $sale))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('sale.supplier_cost_override_cents', 1234));
+
+    $this->actingAs($user)->put(route('sales.update', $sale), [
+        ...$saleData,
+        'supplier_cost_override_enabled' => false,
+        'supplier_cost_override' => '12.34',
+    ])->assertRedirect(route('sales.index'));
+
+    expect($sale->refresh())
+        ->product_cost_cents->toBe(1800)
+        ->supplier_cost_override_cents->toBeNull()
+        ->gross_profit_cents->toBe(2200);
+});
+
 function createSaleForOrderNumber(User $user, string $orderNumber): Sale
 {
     return Sale::create([

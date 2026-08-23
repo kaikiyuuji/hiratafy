@@ -195,6 +195,7 @@ class SaleController extends Controller
                 'shipping_cents' => $sale->shipping_cents,
                 'revenue_cents' => $sale->revenue_cents,
                 'product_cost_cents' => $sale->product_cost_cents,
+                'supplier_cost_override_cents' => $sale->supplier_cost_override_cents,
                 'gross_profit_cents' => $sale->gross_profit_cents,
                 'items' => $sale->items->map(fn ($item): array => [
                     'product_id' => $item->product_id,

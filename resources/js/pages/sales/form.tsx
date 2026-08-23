@@ -55,7 +55,12 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { usePersistentState } from '@/hooks/use-persistent-state';
-import { formatBasisPoints, formatCurrency } from '@/lib/formatters';
+import {
+    centsToInput,
+    formatBasisPoints,
+    formatCurrency,
+    moneyInputToCents,
+} from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import type { CampaignOption } from '@/types';
 
@@ -87,6 +92,8 @@ type SaleFormData = {
     customer_name: string;
     sold_at: string;
     shipping_mode: ShippingMode;
+    supplier_cost_override_enabled: boolean;
+    supplier_cost_override: string;
     notes: string;
     items: SaleItemInput[];
 };
@@ -103,6 +110,7 @@ type ExistingSale = {
     shipping_cents: number;
     revenue_cents: number;
     product_cost_cents: number;
+    supplier_cost_override_cents: number | null;
     gross_profit_cents: number;
     items: { product_id: number | null; quantity: number }[];
 };
@@ -125,7 +133,9 @@ type Preview = {
     shipping_cents: number;
     shipping_charged: boolean;
     revenue_cents: number;
+    automatic_product_cost_cents: number;
     product_cost_cents: number;
+    uses_custom_supplier_cost: boolean;
     gross_profit_cents: number;
 };
 
@@ -152,6 +162,11 @@ export default function SaleForm({
         customer_name: sale?.customer_name ?? '',
         sold_at: sale?.sold_at ?? currentLocalDateTime(),
         shipping_mode: sale?.shipping_mode ?? 'automatic',
+        supplier_cost_override_enabled:
+            typeof sale?.supplier_cost_override_cents === 'number',
+        supplier_cost_override: centsToInput(
+            sale?.supplier_cost_override_cents,
+        ),
         notes: sale?.notes ?? '',
         items:
             sale?.items.map((item) => ({
@@ -168,7 +183,19 @@ export default function SaleForm({
         string[]
     >('hiratafy.sales.recent-product-ids', []);
     const errors = form.errors as Record<string, string>;
-    const preview = calculatePreview(form.data, products, discounts, settings);
+    const customSupplierCostCents =
+        sale !== null &&
+        form.data.supplier_cost_override_enabled &&
+        form.data.supplier_cost_override.trim() !== ''
+            ? Math.max(0, moneyInputToCents(form.data.supplier_cost_override))
+            : null;
+    const preview = calculatePreview(
+        form.data,
+        products,
+        discounts,
+        settings,
+        customSupplierCostCents,
+    );
     const saleDate = form.data.sold_at.slice(0, 10);
     const selectedCampaign = campaigns.find(
         (campaign) => campaign.id === Number(form.data.campaign_id),
@@ -466,6 +493,92 @@ export default function SaleForm({
                                         )}
                                     </div>
                                 </div>
+                                {sale && (
+                                    <div className="grid gap-4 rounded-lg border p-4 sm:grid-cols-[minmax(0,1fr)_minmax(190px,240px)] sm:items-end md:col-span-2 xl:col-span-4">
+                                        <div className="flex items-start gap-3">
+                                            <Checkbox
+                                                id="supplier_cost_override_enabled"
+                                                checked={
+                                                    form.data
+                                                        .supplier_cost_override_enabled
+                                                }
+                                                onCheckedChange={(checked) => {
+                                                    const enabled =
+                                                        checked === true;
+
+                                                    form.setData({
+                                                        ...form.data,
+                                                        supplier_cost_override_enabled:
+                                                            enabled,
+                                                        supplier_cost_override:
+                                                            enabled
+                                                                ? form.data
+                                                                      .supplier_cost_override ||
+                                                                  centsToInput(
+                                                                      preview.automatic_product_cost_cents,
+                                                                  )
+                                                                : '',
+                                                    });
+                                                }}
+                                            />
+                                            <div className="grid gap-1">
+                                                <Label htmlFor="supplier_cost_override_enabled">
+                                                    Personalizar custo total do
+                                                    fornecedor
+                                                </Label>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Substitui o total usado no
+                                                    lucro e nos relatórios. O
+                                                    cálculo automático por item
+                                                    continua registrado.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        {form.data
+                                            .supplier_cost_override_enabled ? (
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="supplier_cost_override">
+                                                    Custo total (USD)
+                                                </Label>
+                                                <Input
+                                                    id="supplier_cost_override"
+                                                    type="number"
+                                                    inputMode="decimal"
+                                                    min="0"
+                                                    step="0.01"
+                                                    required
+                                                    value={
+                                                        form.data
+                                                            .supplier_cost_override
+                                                    }
+                                                    onChange={(event) =>
+                                                        form.setData(
+                                                            'supplier_cost_override',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        form.errors
+                                                            .supplier_cost_override
+                                                    }
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-between gap-3 rounded-md bg-muted/55 px-3 py-2.5 text-sm sm:grid sm:gap-0.5">
+                                                <span className="text-xs text-muted-foreground">
+                                                    Custo automático
+                                                </span>
+                                                <strong className="tabular-nums">
+                                                    {formatCurrency(
+                                                        preview.automatic_product_cost_cents,
+                                                    )}
+                                                </strong>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
 
@@ -638,6 +751,7 @@ function calculatePreview(
     products: CatalogProduct[],
     discounts: DiscountConfig[],
     settings: StoreSettings,
+    customSupplierCostCents: number | null,
 ): Preview {
     const productMap = new Map(
         products.map((product) => [String(product.id), product]),
@@ -719,10 +833,11 @@ function calculatePreview(
         (total, line) => total + line.discount_cents,
         0,
     );
-    const productCost = validLines.reduce(
+    const automaticProductCost = validLines.reduce(
         (total, line) => total + line.cost_cents,
         0,
     );
+    const productCost = customSupplierCostCents ?? automaticProductCost;
     const automaticShippingCharged =
         subtotal > 0 && subtotal < settings.free_shipping_threshold_cents;
     const shippingCharged =
@@ -739,7 +854,9 @@ function calculatePreview(
         shipping_cents: shipping,
         shipping_charged: shippingCharged,
         revenue_cents: revenue,
+        automatic_product_cost_cents: automaticProductCost,
         product_cost_cents: productCost,
+        uses_custom_supplier_cost: customSupplierCostCents !== null,
         gross_profit_cents: revenue - productCost,
     };
 }
@@ -989,9 +1106,19 @@ function SaleSummaryContent({ preview }: { preview: Preview }) {
             </div>
             <SummaryRow
                 icon={Package}
-                label="Custo de produto"
+                label={
+                    preview.uses_custom_supplier_cost
+                        ? 'Custo personalizado'
+                        : 'Custo de produto'
+                }
                 value={`− ${formatCurrency(preview.product_cost_cents)}`}
             />
+            {preview.uses_custom_supplier_cost && (
+                <p className="-mt-2 text-right text-xs text-muted-foreground">
+                    Automático pelos itens:{' '}
+                    {formatCurrency(preview.automatic_product_cost_cents)}
+                </p>
+            )}
             <div className="border-t pt-4">
                 <div className="flex items-end justify-between gap-3">
                     <div>
@@ -1038,7 +1165,11 @@ function MobileSaleSummary({
                         value={formatCurrency(preview.revenue_cents)}
                     />
                     <CompactMetric
-                        label="Custo"
+                        label={
+                            preview.uses_custom_supplier_cost
+                                ? 'Custo manual'
+                                : 'Custo'
+                        }
                         value={formatCurrency(preview.product_cost_cents)}
                     />
                     <CompactMetric

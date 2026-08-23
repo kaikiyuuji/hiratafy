@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Sale;
+use App\Support\Decimal;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -20,7 +21,7 @@ class SaleRequest extends FormRequest
         $sale = $this->route('sale');
         $saleId = $sale instanceof Sale ? $sale->id : null;
 
-        return [
+        $rules = [
             'campaign_id' => [
                 'nullable',
                 'integer',
@@ -49,6 +50,19 @@ class SaleRequest extends FormRequest
             ],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:100000'],
         ];
+
+        if ($sale instanceof Sale) {
+            $rules['supplier_cost_override_enabled'] = ['sometimes', 'boolean'];
+            $rules['supplier_cost_override'] = [
+                'nullable',
+                Rule::requiredIf($this->boolean('supplier_cost_override_enabled')),
+                'decimal:0,2',
+                'min:0',
+                'max:999999999.99',
+            ];
+        }
+
+        return $rules;
     }
 
     /**
@@ -58,6 +72,7 @@ class SaleRequest extends FormRequest
      *     customer_name: string|null,
      *     sold_at: string,
      *     shipping_mode: 'automatic'|'charged'|'free',
+     *     supplier_cost_override_cents: int|null,
      *     notes: string|null,
      *     items: array<int, array{product_id: int, quantity: int}>
      * }
@@ -82,6 +97,12 @@ class SaleRequest extends FormRequest
             'free' => 'free',
             default => 'automatic',
         };
+        $sale = $this->route('sale');
+        $supplierCostOverrideCents = $sale instanceof Sale
+            && $this->boolean('supplier_cost_override_enabled')
+            && $this->filled('supplier_cost_override')
+                ? Decimal::moneyToCents($this->string('supplier_cost_override')->toString())
+                : null;
 
         return [
             'campaign_id' => $this->filled('campaign_id') ? $this->integer('campaign_id') : null,
@@ -93,6 +114,7 @@ class SaleRequest extends FormRequest
                 : null,
             'sold_at' => $this->string('sold_at')->toString(),
             'shipping_mode' => $shippingMode,
+            'supplier_cost_override_cents' => $supplierCostOverrideCents,
             'notes' => $this->filled('notes') ? $this->string('notes')->trim()->toString() : null,
             'items' => $items,
         ];

@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property int $shipping_cents
  * @property int $revenue_cents
  * @property int $product_cost_cents
+ * @property int|null $supplier_cost_override_cents
  * @property int $gross_profit_cents
  * @property string|null $notes
  */
@@ -39,6 +40,7 @@ class Sale extends Model
         'shipping_cents',
         'revenue_cents',
         'product_cost_cents',
+        'supplier_cost_override_cents',
         'gross_profit_cents',
         'notes',
     ];
@@ -52,6 +54,7 @@ class Sale extends Model
             'shipping_cents' => 'integer',
             'revenue_cents' => 'integer',
             'product_cost_cents' => 'integer',
+            'supplier_cost_override_cents' => 'integer',
             'gross_profit_cents' => 'integer',
         ];
     }

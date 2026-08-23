@@ -22,6 +22,7 @@ class SaleRecorder
      *     customer_name: string|null,
      *     sold_at: string,
      *     shipping_mode?: 'automatic'|'charged'|'free',
+     *     supplier_cost_override_cents?: int|null,
      *     notes: string|null,
      *     items: array<int, array{product_id: int, quantity: int}>
      * }  $data
@@ -53,8 +54,20 @@ class SaleRecorder
             $data['items'],
             $data['shipping_mode'] ?? 'automatic',
         );
+        $supplierCostOverrideCents = $sale === null
+            ? null
+            : ($data['supplier_cost_override_cents'] ?? null);
+        $productCostCents = $supplierCostOverrideCents ?? $calculation['product_cost_cents'];
 
-        return DB::transaction(function () use ($user, $data, $sale, $soldAt, $calculation): Sale {
+        return DB::transaction(function () use (
+            $user,
+            $data,
+            $sale,
+            $soldAt,
+            $calculation,
+            $supplierCostOverrideCents,
+            $productCostCents,
+        ): Sale {
             $sale ??= new Sale;
             $sale->fill([
                 'user_id' => $user->id,
@@ -68,8 +81,9 @@ class SaleRecorder
                 'discount_cents' => $calculation['discount_cents'],
                 'shipping_cents' => $calculation['shipping_cents'],
                 'revenue_cents' => $calculation['revenue_cents'],
-                'product_cost_cents' => $calculation['product_cost_cents'],
-                'gross_profit_cents' => $calculation['gross_profit_cents'],
+                'product_cost_cents' => $productCostCents,
+                'supplier_cost_override_cents' => $supplierCostOverrideCents,
+                'gross_profit_cents' => $calculation['revenue_cents'] - $productCostCents,
                 'notes' => $data['notes'],
             ])->save();
 
